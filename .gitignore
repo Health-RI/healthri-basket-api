@@ -52,3 +52,6 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+.idea/.idea.healthri-basket-api/.idea/.gitignore
+.idea/.idea.healthri-basket-api/.idea/encodings.xml
+.idea/.idea.healthri-basket-api/.idea/indexLayout.xml

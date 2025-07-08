@@ -1,0 +1,7 @@
+﻿services:
+  healthri-basket-api:
+    image: healthri-basket-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+

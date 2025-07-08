@@ -1,0 +1,6 @@
+@healthri_basket_api_HostAddress = http://localhost:5152
+
+GET {{healthri_basket_api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

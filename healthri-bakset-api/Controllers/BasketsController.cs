@@ -8,13 +8,14 @@ namespace healthri_basket_api.Controllers;
 [Route("api/v1/baskets")]
 public class BasketsController(IBasketService service) : ControllerBase
 {
+
     [HttpGet("{userUuid}")]
     public async Task<IActionResult> GetUserBaskets(Guid userUuid)
     {
         var baskets = await service.GetBasketsAsync(userUuid);
         return Ok(baskets);
     }
-
+    
     [HttpGet("single/{id:guid}")]
     public async Task<IActionResult> Get(Guid id)
     {

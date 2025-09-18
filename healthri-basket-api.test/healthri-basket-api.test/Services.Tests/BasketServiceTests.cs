@@ -27,7 +27,7 @@ namespace healthri_basket_api.test.Services.Tests
         {
             List<BasketItem> basketItems = CreateDefaultBasketItems();
 
-            return new Basket
+            Basket basket = new Basket
             {
                 Id = Guid.NewGuid(),
                 UserUuid = Guid.NewGuid(),
@@ -40,6 +40,11 @@ namespace healthri_basket_api.test.Services.Tests
                 ArchivedAt = null,
                 DeletedAt = null
             };
+
+            // Mock the repository to return this basket when queried by its ID
+            basketRepository.Setup(r => r.GetByIdAsync(basket.Id)).ReturnsAsync(basket);
+
+            return basket;
         }
 
         private List<BasketItem> CreateDefaultBasketItems()
@@ -53,7 +58,7 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
 
-        // Should return newly created basket with correct properties /done
+        // Should return newly created basket with correct properties
         [Fact]
         public async Task CreateBasketAsyncTest()
         {
@@ -61,6 +66,7 @@ namespace healthri_basket_api.test.Services.Tests
             Guid testUserUuid = Guid.NewGuid();
             string name = "Test Basket";
             bool isDefault = false;
+            var expectedStatus = BasketStatus.Active;
 
             // act 
             Basket createdBasket = await basketService.CreateBasketAsync(testUserUuid, name, isDefault);
@@ -70,11 +76,11 @@ namespace healthri_basket_api.test.Services.Tests
             Assert.Equal(name, createdBasket.Name);
             Assert.Equal(isDefault, createdBasket.IsDefault);
             Assert.Equal(testUserUuid, createdBasket.UserUuid);
-            Assert.Equal(BasketStatus.Active, createdBasket.Status);
+            Assert.Equal(expectedStatus, createdBasket.Status);
             Assert.Empty(createdBasket.Items);
         }
 
-        // Should rename the basket and return true /done
+        // Should rename the basket and return true
         [Fact]
         public async Task RenameBasketAsync()
         {
@@ -82,6 +88,7 @@ namespace healthri_basket_api.test.Services.Tests
             Basket basket = CreateDefaultBasket();
             DateTime startTime = DateTime.UtcNow;
             string newName = "NewBasketName";
+
 
             // act 
             bool success = await basketService.RenameBasketAsync(basket.Id, newName);
@@ -93,7 +100,7 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
         [Fact]
-        // Should return true if basket is successfully deleted /done
+        // Should return true if basket is successfully deleted
         public async Task DeleteBasketAsync()
         {
             // arrange 
@@ -111,7 +118,7 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
         [Fact]
-        // Should return true if BasketStatus is successfully restored (e.g: from any status, to Active) / done
+        // Should return true if BasketStatus is successfully restored (e.g: from any status, to Active)
         public async Task RestoreBasketAsync()
         {
             // arrange
@@ -126,11 +133,10 @@ namespace healthri_basket_api.test.Services.Tests
 
             Assert.NotNull(basket);
             Assert.True(basket.UpdatedAt >= startTime);
-
         }
 
         [Fact]
-        // Should return true if BasketStatus is successfully archived (e.g: from any state, to Archived) / done
+        // Should return true if BasketStatus is successfully archived (e.g: from any state, to Archived)
         public async Task ArchiveBasketAsync()
         {
             // arrange
@@ -149,7 +155,7 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
         [Fact]
-        // Should return true if basket is successfully cleared of all items / done
+        // Should return true if basket is successfully cleared of all items
         public async Task ClearBasketAsync()
         {
             // arrange
@@ -164,7 +170,6 @@ namespace healthri_basket_api.test.Services.Tests
             // assert
             Assert.Empty(basket.Items);
             Assert.True(basket.UpdatedAt >= startTime);
-
         }
 
         [Fact]
@@ -174,22 +179,21 @@ namespace healthri_basket_api.test.Services.Tests
             // arrange
             Basket basket = CreateDefaultBasket();
             DateTime startTime = DateTime.UtcNow;
-
             BasketItem basketItem = new BasketItem();
             basketItem.ItemId = "444";
             basketItem.Source = "tp4";
+            int expectedItems = 1;
 
             // act 
             basket.Items = [];
             bool success = await basketService.AddItemAsync(basket.Id, basketItem.ItemId, basketItem.Source);
 
             // assert
-            Assert.True(basket.Items.Count == 1);
+            Assert.True(basket.Items.Count == expectedItems);
             Assert.True(basket.UpdatedAt >= startTime);
-
-            Assert.Equal(basket.Items[0].ItemId, basketItem.ItemId);
-            Assert.Equal(basket.Items[0].Source, basketItem.Source);
-            Assert.Equal(basket.Items[0].AddedAt, basketItem.AddedAt);
+            Assert.Equal(basket.Items.First().ItemId, basketItem.ItemId);
+            Assert.Equal(basket.Items.First().Source, basketItem.Source);
+            Assert.True(basket.Items.First().AddedAt >= startTime);
         }
 
         [Fact]
@@ -200,12 +204,13 @@ namespace healthri_basket_api.test.Services.Tests
             Basket basket = CreateDefaultBasket();
             DateTime startTime = DateTime.UtcNow;
             string basketItemId = "333";
+            int expectedItems = 2;
 
             // act 
             bool success = await basketService.RemoveItemAsync(basket.Id, basketItemId);
 
             // assert
-            Assert.True(basket.Items.Count == 2);
+            Assert.True(basket.Items.Count == expectedItems);
             Assert.True(basket.UpdatedAt >= startTime);
         }
     }

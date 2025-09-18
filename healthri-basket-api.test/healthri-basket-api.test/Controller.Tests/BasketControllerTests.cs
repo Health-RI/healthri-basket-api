@@ -24,7 +24,7 @@ namespace healthri_basket_api.Tests.Controllers
 
         [Fact]
         // Should return 200 status code and all baskets owned by user
-        public async Task GetUserBasketsTest()
+        public async Task GetUserBaskets()
         {
             // Arrange
             Guid userId = Guid.NewGuid();
@@ -58,7 +58,7 @@ namespace healthri_basket_api.Tests.Controllers
 
         [Fact]
         // Should return 404 status code because basket doesn't exist
-        public async Task GetBasketByIdNotExist()
+        public async Task GetBasketById_BasketNotExist()
         {
             // Arrange
             Guid id = Guid.NewGuid();
@@ -110,7 +110,7 @@ namespace healthri_basket_api.Tests.Controllers
 
         [Fact]
         // Should return 404 status code, because basket doesn't exist.
-        public async Task RenameBasketNotExist()
+        public async Task RenameBasket_BasketNotExist()
         {
             // Arrange
             var id = Guid.NewGuid();
@@ -167,7 +167,7 @@ namespace healthri_basket_api.Tests.Controllers
 
         [Fact]
         // Should retunr 404 status code, because basket doesn't exist.
-        public async Task DeleteBasketNotExist()
+        public async Task DeleteBasket_BasketNotExist()
         {
             var id = Guid.NewGuid();
             _mockService.Setup(s => s.DeleteBasketAsync(id)).ReturnsAsync(false);
@@ -194,7 +194,7 @@ namespace healthri_basket_api.Tests.Controllers
 
         [Fact]
         // Should return 404 status code, because basket doesn't exist.
-        public async Task ClearBasketNotExist()
+        public async Task ClearBasket_BasketNotExist()
         {
             // Arrange
             var id = Guid.NewGuid();

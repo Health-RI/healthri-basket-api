@@ -1,17 +1,17 @@
-﻿using healthri_basket_api.Interfaces;
-using healthri_basket_api.Repositories;
-using healthri_basket_api.Services;
+﻿using keycloak_api.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IUserService, UserService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// Register in-memory services
-builder.Services.AddSingleton<IBasketRepository, InMemoryBasketRepository>();
-builder.Services.AddSingleton<ITransactionLogger, InMemoryTransactionLogger>();
-builder.Services.AddScoped<IBasketService, BasketService>();
 
 var app = builder.Build();
 
@@ -24,6 +24,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-
-

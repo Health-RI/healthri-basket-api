@@ -5,7 +5,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yaml = docker-compose.yaml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "healthri-basket-api", "healthri-bakset-api\healthri-basket-api.csproj", "{8E4416C4-36EC-438A-AC11-82F82DB89674}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "healthri-basket-api", "healthri-basket-api\healthri-basket-api.csproj", "{8E4416C4-36EC-438A-AC11-82F82DB89674}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "healthri-basket-api.test", "healthri-basket-api.test\healthri-basket-api.test\healthri-basket-api.test.csproj", "{B1F54001-6FDE-489A-8396-94858D678AA6}"
 EndProject

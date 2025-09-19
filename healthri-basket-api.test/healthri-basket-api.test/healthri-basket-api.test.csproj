@@ -21,6 +21,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\healthri-bakset-api\healthri-basket-api.csproj" />
+      <ProjectReference Include="..\..\healthri-basket-api\healthri-basket-api.csproj" />
     </ItemGroup>
 </Project>

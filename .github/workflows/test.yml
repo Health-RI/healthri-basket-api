@@ -34,9 +34,8 @@ jobs:
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
       - name: Generate coverage report
-        env:
-          PATH: ${{ env.PATH }}:$HOME/.dotnet/tools
         run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
           REPORTS=$(find . -type f -name 'coverage.cobertura.xml' -print | tr '\n' ';')
           reportgenerator -reports:"$REPORTS" -targetdir:"CoverageReport" -reporttypes:"HtmlInline;Cobertura"
 

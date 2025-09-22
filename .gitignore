@@ -56,3 +56,4 @@ nunit-*.xml
 .idea/.idea.healthri-basket-api/.idea/encodings.xml
 .idea/.idea.healthri-basket-api/.idea/indexLayout.xml
 /.vs
+.idea/vcs.xml

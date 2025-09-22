@@ -61,7 +61,7 @@ namespace healthri_basket_api.test.Services.Tests
             Guid testUserUuid = Guid.NewGuid();
             string name = "Test Basket";
             bool isDefault = false;
-            var expectedStatus = BasketStatus.Active;
+            BasketStatus expectedStatus = BasketStatus.Active;
 
             // Act 
             Basket createdBasket = await _basketService.CreateBasketAsync(testUserUuid, name, isDefault);

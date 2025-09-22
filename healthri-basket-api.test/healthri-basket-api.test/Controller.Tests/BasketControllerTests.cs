@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using healthri_basket_api.Controllers;
+﻿using healthri_basket_api.Controllers;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using Xunit;
 
-namespace healthri_basket_api.Tests.Controllers
+namespace healthri_basket_api.test.Controller.Tests
 {
     public class BasketsControllerTests
     {
@@ -32,10 +27,10 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.GetBasketsAsync(userId)).ReturnsAsync(userBaskets);
 
             // Act
-            var result = await _controller.GetUserBaskets(userId);
+            IActionResult result = await _controller.GetUserBaskets(userId);
             
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
+            OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(userBaskets, okResult.Value);
         }
 
@@ -49,10 +44,10 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(basket);
 
             // Act
-            var result = await _controller.Get(id);
+            IActionResult result = await _controller.Get(id);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
+            OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(basket, okResult.Value);
         }
 
@@ -66,7 +61,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(basket);
 
             // Act
-            var result = await _controller.Get(id);
+            IActionResult result = await _controller.Get(id);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -84,10 +79,10 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.CreateBasketAsync(userId, name, false)).ReturnsAsync(basket);
 
             // Act
-            var result = await _controller.Create(userId, name);
+            IActionResult result = await _controller.Create(userId, name);
 
             // Assert
-            var contentResult = Assert.IsType<CreatedAtActionResult>(result);
+            CreatedAtActionResult contentResult = Assert.IsType<CreatedAtActionResult>(result);
             Assert.Equal(basket, contentResult.Value);
         }
 
@@ -102,7 +97,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.RenameBasketAsync(id, name)).ReturnsAsync(true);
 
             // Act
-            var result = await _controller.Rename(id, name);
+            IActionResult result = await _controller.Rename(id, name);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -118,7 +113,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.RenameBasketAsync(id, name)).ReturnsAsync(false);
 
             // Act
-            var result = await _controller.Rename(id, name);
+            IActionResult result = await _controller.Rename(id, name);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -134,7 +129,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.ArchiveBasketAsync(id)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.Archive(id);
+            IActionResult result = await _controller.Archive(id);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -150,7 +145,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.RestoreBasketAsync(id)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.Restore(id);
+            IActionResult result = await _controller.Restore(id);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -166,7 +161,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.DeleteBasketAsync(id)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.Delete(id);
+            IActionResult result = await _controller.Delete(id);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -182,7 +177,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.DeleteBasketAsync(id)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.Delete(id);
+            IActionResult result = await _controller.Delete(id);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -198,7 +193,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.ClearBasketAsync(id)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.Clear(id);
+            IActionResult result = await _controller.Clear(id);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -214,7 +209,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.ClearBasketAsync(id)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.Clear(id);
+            IActionResult result = await _controller.Clear(id);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -231,7 +226,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.AddItemAsync(id, item.ItemId, item.Source)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.AddItem(id, item);
+            IActionResult result = await _controller.AddItem(id, item);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -248,7 +243,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.AddItemAsync(id, item.ItemId, item.Source)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.AddItem(id, item);
+            IActionResult result = await _controller.AddItem(id, item);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -265,7 +260,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.RemoveItemAsync(id, itemId)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.RemoveItem(id, itemId);
+            IActionResult result = await _controller.RemoveItem(id, itemId);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -282,7 +277,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.RemoveItemAsync(id, itemId)).ReturnsAsync(expectedResponse);
 
             // Act
-            var result = await _controller.RemoveItem(id, itemId);
+            IActionResult result = await _controller.RemoveItem(id, itemId);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);

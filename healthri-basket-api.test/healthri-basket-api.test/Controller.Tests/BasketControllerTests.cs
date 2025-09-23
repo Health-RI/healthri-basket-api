@@ -236,7 +236,7 @@ namespace healthri_basket_api.Tests.Controllers
             // Arrange
             Guid id = Guid.NewGuid();
             bool expectedResponse = true;
-            BasketItem item = new BasketItem { ItemId = "abc123", Source = "sourceA" };
+            BasketItem item = new BasketItem { ItemId = new Guid(), Source = "sourceA" };
             _mockService.Setup(s => s.AddItemAsync(id, item.ItemId, item.Source)).ReturnsAsync(expectedResponse);
 
             // Act
@@ -253,7 +253,7 @@ namespace healthri_basket_api.Tests.Controllers
             // Arrange
             Guid id = Guid.NewGuid();
             bool expectedResponse = false;
-            BasketItem item = new BasketItem { ItemId = "notfound", Source = "sourceB" };
+            BasketItem item = new BasketItem { ItemId = new Guid(), Source = "sourceB" };
             _mockService.Setup(s => s.AddItemAsync(id, item.ItemId, item.Source)).ReturnsAsync(expectedResponse);
 
             // Act
@@ -270,7 +270,7 @@ namespace healthri_basket_api.Tests.Controllers
             // Arrange
             Guid id = Guid.NewGuid();
             bool expectedResponse = true;
-            string itemId = "item123";
+            Guid itemId = new Guid();
             _mockService.Setup(s => s.RemoveItemAsync(id, itemId)).ReturnsAsync(expectedResponse);
 
             // Act
@@ -287,7 +287,7 @@ namespace healthri_basket_api.Tests.Controllers
             // Arrange
             Guid id = Guid.NewGuid();
             bool expectedResponse = false;
-            string itemId = "missingItem";
+            Guid itemId = new Guid();
             _mockService.Setup(s => s.RemoveItemAsync(id, itemId)).ReturnsAsync(expectedResponse);
 
             // Act

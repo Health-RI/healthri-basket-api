@@ -25,7 +25,7 @@ public class Basket
         }
     }
 
-    public void RemoveItem(string itemId)
+    public void RemoveItem(Guid itemId)
     {
         var item = Items.FirstOrDefault(i => i.ItemId == itemId);
         if (item != null)

@@ -12,6 +12,6 @@ public interface IBasketService
     Task<bool> RestoreBasketAsync(Guid basketId);
     Task<bool> ArchiveBasketAsync(Guid basketId);
     Task<bool> ClearBasketAsync(Guid basketId);
-    Task<bool> AddItemAsync(Guid basketId, string itemId, string source);
-    Task<bool> RemoveItemAsync(Guid basketId, string itemId);
+    Task<bool> AddItemAsync(Guid basketId, Guid itemId, string source);
+    Task<bool> RemoveItemAsync(Guid basketId, Guid itemId);
 }

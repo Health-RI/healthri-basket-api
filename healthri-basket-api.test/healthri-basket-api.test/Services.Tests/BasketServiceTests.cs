@@ -46,9 +46,9 @@ namespace healthri_basket_api.test.Services.Tests
         {
             return new List<BasketItem>
             {
-                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi1", ItemId = "111"},
-                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi2", ItemId = "222"},
-                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi3", ItemId = "333"},
+                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi1", ItemId = new Guid()},
+                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi2", ItemId = new Guid()},
+                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi3", ItemId = new Guid()},
             };
         }
 
@@ -171,7 +171,6 @@ namespace healthri_basket_api.test.Services.Tests
             Basket basket = CreateDefaultBasket();
             DateTime startTime = DateTime.UtcNow;
             BasketItem basketItem = new BasketItem();
-            basketItem.ItemId = "444";
             basketItem.Source = "bi4";
             int expectedItems = 1;
 
@@ -194,7 +193,7 @@ namespace healthri_basket_api.test.Services.Tests
             // Arrange
             Basket basket = CreateDefaultBasket();
             DateTime startTime = DateTime.UtcNow;
-            string basketItemId = "333";
+            Guid basketItemId = basket.Items[0].ItemId;
             int expectedItems = 2;
 
             // Act 

@@ -23,15 +23,13 @@ public class BasketsController(IBasketService service) : ControllerBase
             return Ok(baskets);
         }
 
-
-
         return BadRequest();
     }
     
     [HttpGet("single/{id:guid}")]
-    public async Task<IActionResult> Get(Guid id)
+    public async Task<IActionResult> Get(Guid basketId)
     {
-        var basket = await service.GetByIdAsync(id);
+        var basket = await service.GetByIdAsync(basketId);
         return basket == null ? NotFound() : Ok(basket);
     }
 
@@ -42,52 +40,52 @@ public class BasketsController(IBasketService service) : ControllerBase
         return CreatedAtAction(nameof(Get), new { id = basket.Id }, basket);
     }
 
-    [HttpPut("{id:guid}/rename")]
-    public async Task<IActionResult> Rename(Guid id, [FromBody] string name)
+    [HttpPut("{basketId:guid}/rename")]
+    public async Task<IActionResult> Rename(Guid basketId, [FromBody] string name)
     {
-        var result = await service.RenameBasketAsync(id, name);
+        var result = await service.RenameBasketAsync(basketId, name);
         return result ? Ok() : NotFound();
     }
 
-    [HttpPost("{id:guid}/archive")]
-    public async Task<IActionResult> Archive(Guid id)
+    [HttpPost("{basketId:guid}/archive")]
+    public async Task<IActionResult> Archive(Guid basketId)
     {
-        var result = await service.ArchiveBasketAsync(id);
+        var result = await service.ArchiveBasketAsync(basketId);
         return result ? Ok() : NotFound();
     }
 
-    [HttpPost("{id:guid}/restore")]
-    public async Task<IActionResult> Restore(Guid id)
+    [HttpPost("{basketId:guid}/restore")]
+    public async Task<IActionResult> Restore(Guid basketId)
     {
-        var result = await service.RestoreBasketAsync(id);
+        var result = await service.RestoreBasketAsync(basketId);
         return result ? Ok() : NotFound();
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    [HttpDelete("{basketId:guid}")]
+    public async Task<IActionResult> Delete(Guid basketId)
     {
-        var result = await service.DeleteBasketAsync(id);
+        var result = await service.DeleteBasketAsync(basketId);
         return result ? Ok() : NotFound();
     }
 
-    [HttpDelete("{id:guid}/clear")]
-    public async Task<IActionResult> Clear(Guid id)
+    [HttpDelete("{basketId:guid}/clear")]
+    public async Task<IActionResult> Clear(Guid basketId)
     {
-        var result = await service.ClearBasketAsync(id);
+        var result = await service.ClearBasketAsync(basketId);
         return result ? Ok() : NotFound();
     }
 
-    [HttpPost("{id:guid}/items")]
-    public async Task<IActionResult> AddItem(Guid id, [FromBody] BasketItem item)
+    [HttpPost("{basketId:guid}/items")]
+    public async Task<IActionResult> AddItem(Guid basketId, [FromBody] BasketItem item)
     {
-        var result = await service.AddItemAsync(id, item.ItemId, item.Source);
+        var result = await service.AddItemAsync(basketId, item.ItemId, item.Source);
         return result ? Ok() : NotFound();
     }
 
-    [HttpDelete("{id:guid}/items/{itemId}")]
-    public async Task<IActionResult> RemoveItem(Guid id, string itemId)
+    [HttpDelete("{basketId:guid}/items/{itemId}")]
+    public async Task<IActionResult> RemoveItem(Guid basketId, Guid itemId)
     {
-        var result = await service.RemoveItemAsync(id, itemId);
+        var result = await service.RemoveItemAsync(basketId, itemId);
         return result ? Ok() : NotFound();
     }
 }

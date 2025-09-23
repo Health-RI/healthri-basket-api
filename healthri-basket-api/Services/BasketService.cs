@@ -90,7 +90,7 @@ public class BasketService(IBasketRepository repository, ITransactionLogger logg
         return true;
     }
 
-    public async Task<bool> AddItemAsync(Guid basketId, string itemId, string source)
+    public async Task<bool> AddItemAsync(Guid basketId, Guid itemId, string source)
     {
         var basket = await repository.GetByIdAsync(basketId);
         if (basket == null) return false;
@@ -102,19 +102,19 @@ public class BasketService(IBasketRepository repository, ITransactionLogger logg
         });
 
         await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, itemId, "add", source);
+        await logger.LogAsync(basket.UserUuid, basket.Id, itemId.ToString(), "add", source);
 
         return true;
     }
 
-    public async Task<bool> RemoveItemAsync(Guid basketId, string itemId)
+    public async Task<bool> RemoveItemAsync(Guid basketId, Guid itemId)
     {
         var basket = await repository.GetByIdAsync(basketId);
         if (basket == null) return false;
 
         basket.RemoveItem(itemId);
         await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, itemId, "remove", "api");
+        await logger.LogAsync(basket.UserUuid, basket.Id, itemId.ToString(), "remove", "api");
 
         return true;
     }

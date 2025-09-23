@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace healthri_basket_api.Models;
 
 public enum BasketStatus

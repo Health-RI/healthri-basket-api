@@ -2,14 +2,9 @@
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace healthri_basket_api.Tests.Controllers
 {

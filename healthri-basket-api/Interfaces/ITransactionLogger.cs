@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-
 namespace healthri_basket_api.Interfaces;
 
 public interface ITransactionLogger

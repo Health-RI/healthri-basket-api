@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using healthri_basket_api.Controllers;
+﻿using healthri_basket_api.Controllers;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace healthri_basket_api.Tests.Controllers
@@ -31,9 +33,21 @@ namespace healthri_basket_api.Tests.Controllers
             List<Basket> userBaskets = new List<Basket> { new() { Id = Guid.NewGuid(), Name = "Test" } };
             _mockService.Setup(s => s.GetBasketsAsync(userId)).ReturnsAsync(userBaskets);
 
+            // Mock authenticated user with "admin" role
+            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Role, "admin")
+            ], "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
             // Act
             var result = await _controller.GetUserBaskets();
-            
+
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(userBaskets, okResult.Value);

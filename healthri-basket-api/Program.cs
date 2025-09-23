@@ -5,10 +5,7 @@ using healthri_basket_api.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
-using Npgsql;
-using System;
 
 var builder = WebApplication.CreateBuilder(args);
 

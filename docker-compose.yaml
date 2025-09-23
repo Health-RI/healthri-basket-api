@@ -1,7 +1,13 @@
-# Docker Compose file to set up Keycloak server
-# https://www.keycloak.org/getting-started/getting-started-docker
-
 services:
+  healthri-basket-api:
+    image: healthri-basket-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+      - 8081:8081
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.4
     container_name: keycloak

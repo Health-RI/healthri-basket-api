@@ -32,7 +32,7 @@ namespace healthri_basket_api.Tests.Controllers
             _mockService.Setup(s => s.GetBasketsAsync(userId)).ReturnsAsync(userBaskets);
 
             // Act
-            var result = await _controller.GetUserBaskets(userId);
+            var result = await _controller.GetUserBaskets();
             
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);

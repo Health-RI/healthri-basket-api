@@ -12,8 +12,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "healthri-basket-api", "heal
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "healthri-basket-api.test", "healthri-basket-api.test\healthri-basket-api.test\healthri-basket-api.test.csproj", "{B1F54001-6FDE-489A-8396-94858D678AA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keycloak-api", "keycloak-api\keycloak-api.csproj", "{35BC4716-3627-42E9-95A3-69151B44506D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,10 +26,6 @@ Global
 		{B1F54001-6FDE-489A-8396-94858D678AA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1F54001-6FDE-489A-8396-94858D678AA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1F54001-6FDE-489A-8396-94858D678AA6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{35BC4716-3627-42E9-95A3-69151B44506D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{35BC4716-3627-42E9-95A3-69151B44506D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{35BC4716-3627-42E9-95A3-69151B44506D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{35BC4716-3627-42E9-95A3-69151B44506D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using healthri_basket_api.Models;
 using healthri_basket_api.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace healthri_basket_api.Controllers;
 
@@ -9,11 +11,21 @@ namespace healthri_basket_api.Controllers;
 public class BasketsController(IBasketService service) : ControllerBase
 {
 
+    [Authorize(Roles = "admin")]
     [HttpGet("{userUuid}")]
-    public async Task<IActionResult> GetUserBaskets(Guid userUuid)
+    public async Task<IActionResult> GetUserBaskets()
     {
-        var baskets = await service.GetBasketsAsync(userUuid);
-        return Ok(baskets);
+        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userObjectGuid))
+        {
+
+            var userObjectId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var baskets = await service.GetBasketsAsync(userObjectGuid);
+            return Ok(baskets);
+        }
+
+
+
+        return BadRequest();
     }
     
     [HttpGet("single/{id:guid}")]

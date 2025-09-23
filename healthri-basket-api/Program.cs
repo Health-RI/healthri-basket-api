@@ -28,7 +28,7 @@ builder.Services.AddAuthentication(options =>
 .AddOpenIdConnect(options =>
 {
     // https://medium.com/@ahmed.gaduo_93938/how-to-implement-keycloak-authentication-in-a-net-core-application-ce8603698f24
-    options.Authority = "http://localhost:8080/realms/healthri-basket-api/";
+    options.Authority = "http://localhost:8082/realms/healthri-basket-api/";
     options.ClientId = "healthri-basket-api-client";
     options.ClientSecret = "3lAfRpNhfcpAr5gk3dhONsSVEpAPDy0B"; // client authentication must be enabled
     options.ResponseType = "code";

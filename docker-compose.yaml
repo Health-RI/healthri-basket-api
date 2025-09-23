@@ -1,6 +1,7 @@
 services:
   healthri-basket-api:
     image: healthri-basket-api
+    container_name: healthri-basket-api
     build:
       context: .
       dockerfile: ./healthri-basket-api/Dockerfile
@@ -20,5 +21,22 @@ services:
       - keycloak_data:/opt/keycloak/data
     command: ["start-dev"]
 
+  db:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: test
+    volumes:
+      - pgdata:/var/lib/postgresql/data 
+ 
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - 8083:8083
+
 volumes:
   keycloak_data:
+  pgdata:  

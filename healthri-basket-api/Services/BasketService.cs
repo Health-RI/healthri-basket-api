@@ -1,8 +1,6 @@
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
-using healthri_basket_api.Repositories;
-using System.Reflection.Metadata.Ecma335;
 
 namespace healthri_basket_api.Services;
 

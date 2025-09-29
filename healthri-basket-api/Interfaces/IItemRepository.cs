@@ -1,5 +1,4 @@
 ﻿using healthri_basket_api.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace healthri_basket_api.Interfaces;
 

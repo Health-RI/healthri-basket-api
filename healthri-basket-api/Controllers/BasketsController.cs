@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using healthri_basket_api.Models;
 using healthri_basket_api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -13,7 +12,7 @@ public class BasketsController(IBasketService service) : ControllerBase
 {
 
     [Authorize(Roles = "admin")]
-    [HttpGet("/users/{userUuid}")]
+    [HttpGet("users/{userId}")]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
         if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userObjectGuid))
@@ -27,14 +26,14 @@ public class BasketsController(IBasketService service) : ControllerBase
         return BadRequest();
     }
     
-    [HttpGet("{id:guid}")]
+    [HttpGet("{basketId:guid}")]
     public async Task<IActionResult> Get(Guid basketId, CancellationToken ct)
     {
         var basket = await service.GetByIdAsync(basketId, ct);
         return basket != null ? Ok(basket) : NotFound();
     }
 
-    [HttpPost("{userUuid:guid}")]
+    [HttpPost("{userId:guid}")]
     public async Task<IActionResult> Create(Guid userId, [FromBody] string name, CancellationToken ct)
     {
         var basket = await service.CreateAsync(userId, name, false, ct);

@@ -1,5 +1,4 @@
 using healthri_basket_api.Models.Enums;
-using Microsoft.Extensions.Configuration.UserSecrets;
 using System.ComponentModel.DataAnnotations;
 
 namespace healthri_basket_api.Models;

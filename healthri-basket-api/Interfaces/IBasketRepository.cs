@@ -4,9 +4,10 @@ namespace healthri_basket_api.Interfaces;
 
 public interface IBasketRepository
 {
-    Task<IEnumerable<Basket>> GetUserBasketsAsync(Guid userUuid);
-    Task<Basket?> GetByIdAsync(Guid id);
-    Task AddAsync(Basket basket);
-    Task UpdateAsync(Basket basket);
-    Task DeleteAsync(Guid id);
+    Task<List<Basket>> GetUserBasketsAsync(Guid userUuid);
+    Task<Basket?> GetBasketByIdAsync(Guid id);
+    Task AddItemToBasketAsync(BasketItem basketItem);
+    Task CreateBasketAsync(Basket basket);
+    Task UpdateBasketAsync(Basket basket);
+    Task DeleteBasketAsync(Basket basket);
 }

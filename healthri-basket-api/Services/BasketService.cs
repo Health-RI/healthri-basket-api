@@ -1,120 +1,130 @@
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
+using healthri_basket_api.Models.Enums;
+using healthri_basket_api.Repositories;
 
 namespace healthri_basket_api.Services;
 
-public class BasketService(IBasketRepository repository, ITransactionLogger logger) : IBasketService
+public class BasketService : IBasketService
 {
+    private readonly IBasketRepository _basketRepository;
+    private readonly IItemService _itemService;
+    private readonly ITransactionLogger _logger;
+
+    public BasketService(IBasketRepository basketRepository, IItemService itemService, ITransactionLogger logger)
+    {
+        _basketRepository = basketRepository;
+        _itemService = itemService;
+        _logger = logger;
+    }
+
     public async Task<IEnumerable<Basket>> GetBasketsAsync(Guid userUuid)
     {
-        return await repository.GetUserBasketsAsync(userUuid);
+        return await _basketRepository.GetUserBasketsAsync(userUuid);
     }
 
     public async Task<Basket?> GetByIdAsync(Guid basketId)
     {
-        return await repository.GetByIdAsync(basketId);
+        return await _basketRepository.GetBasketByIdAsync(basketId);
     }
 
-    public async Task<Basket> CreateBasketAsync(Guid userUuid, string name, bool isDefault = false)
+    public async Task<Basket> CreateBasketAsync(Guid userId, string name, bool isDefault)
     {
-        var basket = new Basket
-        {
-            UserUuid = userUuid,
-            Name = name,
-            IsDefault = isDefault
-        };
-
-        await repository.AddAsync(basket);
-        await logger.LogAsync(userUuid, basket.Id, string.Empty, "create_basket", "api");
-
+        var basket = new Basket(userId, name, isDefault);
+        
+        await _basketRepository.CreateBasketAsync(basket);
+        await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.CreateBasket, BasketItemSource.UserPage);
         return basket;
     }
 
     public async Task<bool> RenameBasketAsync(Guid basketId, string newName)
     {
-        var basket = await repository.GetByIdAsync(basketId);
+        var basket = await _basketRepository.GetBasketByIdAsync(basketId);
         if (basket == null) return false;
 
         basket.Rename(newName);
-        await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, string.Empty, "rename_basket", "api");
+        await _basketRepository.UpdateBasketAsync(basket);
+        await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage);
 
         return true;
     }
 
     public async Task<bool> DeleteBasketAsync(Guid basketId)
     {
-        var basket = await repository.GetByIdAsync(basketId);
+        var basket = await _basketRepository.GetBasketByIdAsync(basketId);
         if (basket == null || basket.IsDefault) return false;
 
         basket.Delete();
-        await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, string.Empty, "delete_basket", "api");
+        await _basketRepository.UpdateBasketAsync(basket);
+        await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage);
 
         return true;
     }
 
     public async Task<bool> RestoreBasketAsync(Guid basketId)
     {
-        var basket = await repository.GetByIdAsync(basketId);
+        var basket = await _basketRepository.GetBasketByIdAsync(basketId);
         if (basket == null) return false;
 
         basket.Restore();
-        await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, string.Empty, "restore_basket", "api");
+        await _basketRepository.UpdateBasketAsync(basket);
+        await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage);
 
         return true;
     }
 
     public async Task<bool> ArchiveBasketAsync(Guid basketId)
     {
-        var basket = await repository.GetByIdAsync(basketId);
+        var basket = await _basketRepository.GetBasketByIdAsync(basketId);
         if (basket == null) return false;
 
         basket.Archive();
-        await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, string.Empty, "archive_basket", "api");
+        await _basketRepository.UpdateBasketAsync(basket);
+        await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage);
 
         return true;
     }
 
     public async Task<bool> ClearBasketAsync(Guid basketId)
     {
-        var basket = await repository.GetByIdAsync(basketId);
+        var basket = await _basketRepository.GetBasketByIdAsync(basketId);
         if (basket == null) return false;
 
         basket.ClearItems();
-        await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, string.Empty, "clear_basket", "api");
+        await _basketRepository.UpdateBasketAsync(basket);
+        await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage);
 
         return true;
     }
 
-    public async Task<bool> AddItemAsync(Guid basketId, Guid itemId, string source)
+    public async Task<bool> AddItemToBasketAsync(Guid basketId, Guid itemId, BasketItemSource source)
     {
-        var basket = await repository.GetByIdAsync(basketId);
+        var basket = await _basketRepository.GetBasketByIdAsync(basketId);
         if (basket == null) return false;
 
-        basket.AddItem(new BasketItem
-        {
-            ItemId = itemId,
-            Source = source
-        });
+        var item = await _itemService.GetItemByIdAsync(itemId);
+        if (item == null) return false;
 
-        await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, itemId.ToString(), "add", source);
+        var basketItem = new BasketItem(basket, item);
+        await _basketRepository.AddItemToBasketAsync(basketItem);
+
+        await _basketRepository.UpdateBasketAsync(basket);
+        await _logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.RenameBasket, source);
 
         return true;
     }
 
-    public async Task<bool> RemoveItemAsync(Guid basketId, Guid itemId)
+    public async Task<bool> RemoveItemFromBasketAsync(Guid basketId, Guid itemId, BasketItemSource source)
     {
-        var basket = await repository.GetByIdAsync(basketId);
+        var basket = await _basketRepository.GetBasketByIdAsync(basketId);
         if (basket == null) return false;
 
-        basket.RemoveItem(itemId);
-        await repository.UpdateAsync(basket);
-        await logger.LogAsync(basket.UserUuid, basket.Id, itemId.ToString(), "remove", "api");
+        var item = await _itemService.GetItemByIdAsync(itemId);
+        if (item == null) return false;
+        basket.RemoveItem(item.Id);
+
+        await _basketRepository.UpdateBasketAsync(basket);
+        await _logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.RemoveItem, source);
 
         return true;
     }

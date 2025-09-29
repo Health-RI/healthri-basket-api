@@ -1,4 +1,5 @@
 using healthri_basket_api.Models;
+using healthri_basket_api.Models.Enums;
 
 namespace healthri_basket_api.Interfaces;
 
@@ -12,6 +13,6 @@ public interface IBasketService
     Task<bool> RestoreBasketAsync(Guid basketId);
     Task<bool> ArchiveBasketAsync(Guid basketId);
     Task<bool> ClearBasketAsync(Guid basketId);
-    Task<bool> AddItemAsync(Guid basketId, Guid itemId, string source);
-    Task<bool> RemoveItemAsync(Guid basketId, Guid itemId);
+    Task<bool> AddItemToBasketAsync(Guid basketId, Guid itemId, BasketItemSource source);
+    Task<bool> RemoveItemFromBasketAsync(Guid basketId, Guid itemId, BasketItemSource source);
 }

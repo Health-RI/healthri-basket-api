@@ -3,6 +3,7 @@ using healthri_basket_api.Models;
 using healthri_basket_api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using healthri_basket_api.Models.Enums;
 
 namespace healthri_basket_api.Controllers;
 
@@ -76,16 +77,16 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpPost("{basketId:guid}/items")]
-    public async Task<IActionResult> AddItem(Guid basketId, [FromBody] BasketItem item)
+    public async Task<IActionResult> AddItem(Guid basketId, [FromBody] Guid itemId)
     {
-        var result = await service.AddItemAsync(basketId, item.ItemId, item.Source);
+        var result = await service.AddItemToBasketAsync(basketId, itemId, BasketItemSource.CatalogPage);
         return result ? Ok() : NotFound();
     }
 
     [HttpDelete("{basketId:guid}/items/{itemId}")]
     public async Task<IActionResult> RemoveItem(Guid basketId, Guid itemId)
     {
-        var result = await service.RemoveItemAsync(basketId, itemId);
+        var result = await service.RemoveItemFromBasketAsync(basketId, itemId, BasketItemSource.CatalogPage);
         return result ? Ok() : NotFound();
     }
 }

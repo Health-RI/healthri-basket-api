@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using healthri_basket_api.Database;
@@ -11,9 +12,11 @@ using healthri_basket_api.Database;
 namespace healthri_basket_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250929091113_InitialMigration")]
+    partial class InitialMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,19 +106,19 @@ namespace healthri_basket_api.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            Id = new Guid("ead26b2a-08a6-4eae-a95e-0dd29c0c3a3b"),
                             Description = "Collection of patient monitoring data of premature infants, ECG, CI and parameters as SpO2 and Temp. Half of the infants experienced a period of late onset sepsis during their hospital stay, the other half does not.",
                             Title = "NEOLOS - physiological measurements of preterm infants with and without late onset sepsis"
                         },
                         new
                         {
-                            Id = new Guid("11111111-1111-1111-1111-222222222222"),
+                            Id = new Guid("ee365d89-d86a-48fe-a9d6-a5206f070ba3"),
                             Description = "Infectiepreventie van COVID-19 in ziekenhuizen - omgevingsstudie; COntrol of COVID-19 iN Hospitals - environmental study",
                             Title = "COntrol of COVID-19 iN Hospitals - environmental study"
                         },
                         new
                         {
-                            Id = new Guid("11111111-1111-1111-1111-333333333333"),
+                            Id = new Guid("1c5fa233-0c7c-4335-9ad8-0085caf32e20"),
                             Description = "ctDNA on the way to implementation in the Netherlands (COIN)",
                             Title = "ctDNA on the way to implementation in the Netherlands (COIN)"
                         });

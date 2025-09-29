@@ -13,17 +13,19 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register in-memory services
-builder.Services.AddSingleton<IBasketRepository, InMemoryBasketRepository>();
-builder.Services.AddSingleton<ITransactionLogger, InMemoryTransactionLogger>();
+builder.Services.AddScoped<IBasketRepository, BasketRepository>();
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
+builder.Services.AddScoped<ITransactionLogger, TransactionLoggerRepository>();
+builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IBasketService, BasketService>();
 
 // PostgreSQL database setup (https://www.npgsql.org/efcore/index.html?tabs=onconfiguring)
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
-
 builder.Services.AddDbContextPool<AppDbContext>(opt =>
     opt.UseNpgsql(connectionString));
 
+// Authentication setup (https://learn.microsoft.com/en-us/aspnet/core/security/authentication/social/openid-connect?view=aspnetcore-7.0)
+// https://medium.com/@ahmed.gaduo_93938/how-to-implement-keycloak-authentication-in-a-net-core-application-ce8603698f24
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -33,12 +35,12 @@ builder.Services.AddAuthentication(options =>
 {
     options.LoginPath = "/Account/Login";
 })
+
 .AddOpenIdConnect(options =>
 {
-    // https://medium.com/@ahmed.gaduo_93938/how-to-implement-keycloak-authentication-in-a-net-core-application-ce8603698f24
-    options.Authority = "http://localhost:8082/realms/healthri-basket-api/";
-    options.ClientId = "healthri-basket-api-client";
-    options.ClientSecret = "3lAfRpNhfcpAr5gk3dhONsSVEpAPDy0B"; // client authentication must be enabled
+    options.Authority = builder.Configuration.GetSection("OpenID")["Authority"];
+    options.ClientId = builder.Configuration.GetSection("OpenID")["ClientId"]; ;
+    options.ClientSecret = builder.Configuration.GetSection("OpenID")["ClientSecret"]; ; // client authentication must be enabled
     options.ResponseType = "code";
     options.SaveTokens = true;
     options.Scope.Add("openid");

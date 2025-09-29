@@ -1,3 +1,5 @@
+using healthri_basket_api.Models.Enums;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using System.ComponentModel.DataAnnotations;
 
 namespace healthri_basket_api.Models;
@@ -5,32 +7,41 @@ namespace healthri_basket_api.Models;
 public class Basket
 {
     [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid UserUuid { get; set; }
-    public string Name { get; set; } = string.Empty;
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public string Name { get; set; }
     public bool IsDefault { get; set; }
-    public BasketStatus Status { get; set; } = BasketStatus.Active;
-    public List<BasketItem> Items { get; set; } = new();
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public BasketStatus Status { get; set; }
+    public List<BasketItem> Items { get; set; }
     public DateTime? DeletedAt { get; set; }
     public DateTime? ArchivedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    
+    public Basket(Guid userId, string name, bool isDefault) { 
+        Id = Guid.NewGuid();
+        UserId = userId;
+        Name = name;
+        IsDefault = isDefault;
+        Status = BasketStatus.Active;
+        Items = [];
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
 
-    public void AddItem(BasketItem item)
+    public void AddItem(Item item)
     {
-        if (Items.All(i => i.ItemId != item.ItemId))
-        {
-            Items.Add(item);
-            UpdatedAt = DateTime.UtcNow;
-        }
+        var basketItem = new BasketItem(this, item);
+        Items.Add(basketItem);
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void RemoveItem(Guid itemId)
     {
-        var item = Items.FirstOrDefault(i => i.ItemId == itemId);
-        if (item != null)
+        var basketItem = Items.FirstOrDefault(i => i.ItemId.Equals(itemId));
+        if (basketItem != null)
         {
-            Items.Remove(item);
+            Items.Remove(basketItem);
             UpdatedAt = DateTime.UtcNow;
         }
     }

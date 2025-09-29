@@ -12,9 +12,9 @@ public class ItemService : IItemService
         _itemRepository = itemRepository;
     }
 
-    public async Task<Item?> GetItemByIdAsync(Guid id)
+    public async Task<Item?> GetByIdAsync(Guid id, CancellationToken ct)
     {
-        var item = await _itemRepository.GetItemByIdAsync(id);
+        var item = await _itemRepository.GetByIdAsync(id, ct);
         return item;
     }
 }

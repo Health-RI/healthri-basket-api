@@ -4,5 +4,5 @@ namespace healthri_basket_api.Interfaces;
 
 public interface IItemService
 {
-    Task<Item?> GetItemByIdAsync(Guid id);
+    Task<Item?> GetByIdAsync(Guid id, CancellationToken ct);
 }

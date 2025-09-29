@@ -13,40 +13,44 @@ public class BasketRepository : IBasketRepository
     {
         _context = context;
     }
-
-    public async Task<List<Basket>> GetUserBasketsAsync(Guid userId)
+    public async Task<Basket> CreateAsync(Basket basket, CancellationToken ct)
     {
-        return await _context.Baskets
-            .Where(b => b.UserId == userId)
-            .ToListAsync();
+        await _context.Baskets.AddAsync(basket, ct);
+        await _context.SaveChangesAsync(ct);
+        return basket;
     }
 
-    public async Task<Basket?> GetBasketByIdAsync(Guid basketId)
-    {
-        return await _context.Baskets.FirstOrDefaultAsync(b => b.Id == basketId);
-    }
-
-    public async Task CreateBasketAsync(Basket basket)
-    {
-        await _context.Baskets.AddAsync(basket);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task AddItemToBasketAsync(BasketItem basketItem)
-    {
-        await _context.BasketItems.AddAsync(basketItem);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task UpdateBasketAsync(Basket basket)
+    public async Task<Basket> UpdateAsync(Basket basket, CancellationToken ct)
     {
         _context.Baskets.Update(basket);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(ct);
+        return basket;
     }
 
-    public async Task DeleteBasketAsync(Basket basket)
+    public async Task<bool> DeleteAsync(Basket basket, CancellationToken ct)
     {
         _context.Baskets.Remove(basket);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(ct);
+        return true;
     }
+
+    public async Task<bool> AddItemAsync(BasketItem item, CancellationToken ct)
+    {
+        await _context.BasketItems.AddAsync(item, ct);
+        await _context.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<List<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)
+    {
+        return await _context.Baskets
+            .Where(b => b.UserId.Equals(userId))
+            .ToListAsync(ct);
+    }
+
+    public async Task<Basket?> GetByIdAsync(Guid basketId, CancellationToken ct)
+    {
+        return await _context.Baskets.FirstOrDefaultAsync(b => b.Id.Equals(basketId), ct);
+    }
+
 }

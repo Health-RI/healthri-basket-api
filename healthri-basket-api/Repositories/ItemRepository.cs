@@ -14,7 +14,7 @@ namespace healthri_basket_api.Repositories
             _context = context;
         }
 
-        public Task<Item?> GetItemByIdAsync(Guid id)
+        public Task<Item?> GetByIdAsync(Guid id, CancellationToken ct)
         {
             return _context.Items.FirstOrDefaultAsync(i => i.Id == id);
         }

@@ -44,13 +44,16 @@ public class BasketRepository : IBasketRepository
     public async Task<List<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)
     {
         return await _context.Baskets
+            .Include(b => b.Items)
             .Where(b => b.UserId.Equals(userId))
             .ToListAsync(ct);
     }
 
     public async Task<Basket?> GetByIdAsync(Guid basketId, CancellationToken ct)
     {
-        return await _context.Baskets.FirstOrDefaultAsync(b => b.Id.Equals(basketId), ct);
+        return await _context.Baskets
+            .Include(b => b.Items)
+            .FirstOrDefaultAsync(b => b.Id.Equals(basketId), ct);
     }
 
 }

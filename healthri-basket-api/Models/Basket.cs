@@ -35,14 +35,20 @@ public class Basket
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RemoveItem(Guid itemId)
+    public void RemoveItem(Guid basketItemId)
     {
-        var basketItem = Items.FirstOrDefault(i => i.ItemId.Equals(itemId));
-        if (basketItem != null)
-        {
-            Items.Remove(basketItem);
-            UpdatedAt = DateTime.UtcNow;
+        BasketItem? basketItem = this.Items.FirstOrDefault(i => i.Id.Equals(basketItemId));
+        if (basketItem == null){
+            return;
         }
+                    
+        Items.Remove(basketItem);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool HasItem(Guid itemId)
+    {
+        return this.Items.Any(bi => bi.ItemId.Equals(itemId));
     }
 
     public void ClearItems()

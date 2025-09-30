@@ -41,6 +41,14 @@ public class BasketRepository : IBasketRepository
         return true;
     }
 
+    public async Task<bool> RemoveItemAsync(BasketItem item, CancellationToken ct)
+    {
+        _context.BasketItems.Remove(item);
+        await _context.SaveChangesAsync(ct);
+        return true;
+    }
+
+
     public async Task<List<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)
     {
         return await _context.Baskets

@@ -20,29 +20,25 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Basket>()
             .HasMany(b => b.Items)
             .WithOne(i => i.Basket)
-            .HasForeignKey(i => i.BasketId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(i => i.BasketId);
 
         // Item -> BasketItems (Cascade delete)
         modelBuilder.Entity<Item>()
             .HasMany(i => i.Baskets)
             .WithOne(b => b.Item)
-            .HasForeignKey(b => b.ItemId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(b => b.ItemId);
 
         // BasketItem -> Basket (Restrict BasketItem for Basket deletion)
         modelBuilder.Entity<BasketItem>()
             .HasOne(bi => bi.Basket)
             .WithMany(b => b.Items)
-            .HasForeignKey(bi => bi.BasketId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(bi => bi.BasketId);
 
         // BasketItem -> Item (Restrict BasketItem for item delete)
         modelBuilder.Entity<BasketItem>()
             .HasOne(bi => bi.Item)
             .WithMany(i => i.Baskets)
-            .HasForeignKey(bi => bi.ItemId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(bi => bi.ItemId);
 
         // Seed Items
         modelBuilder.Entity<Item>().HasData(

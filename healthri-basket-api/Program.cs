@@ -35,7 +35,6 @@ builder.Services.AddAuthentication(options =>
 {
     options.LoginPath = "/Account/Login";
 })
-
 .AddOpenIdConnect(options =>
 {
     options.Authority = builder.Configuration.GetSection("OpenID")["Authority"];

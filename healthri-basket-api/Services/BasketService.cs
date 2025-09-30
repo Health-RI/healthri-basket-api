@@ -107,6 +107,11 @@ public class BasketService : IBasketService
                 throw new Exception("Basket not found");
             }
 
+            if (basket.HasItem(itemId))
+            {
+                throw new Exception("Item already in basket");
+            }
+
             // Retrieve item
             var item = await _itemService.GetByIdAsync(itemId, ct);
             if (item == null)
@@ -139,9 +144,8 @@ public class BasketService : IBasketService
         var basket = await _basketRepository.GetByIdAsync(basketId, ct);
         if (basket == null) return false;
 
-        var item = await _itemService.GetByIdAsync(itemId, ct);
-        if (item == null) return false;
-        basket.RemoveItem(item.Id);
+        // Update in-memory basket model
+        basket.RemoveItem(itemId);
 
         await _basketRepository.UpdateAsync(basket, ct);
         await _logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.RemoveItem, source);

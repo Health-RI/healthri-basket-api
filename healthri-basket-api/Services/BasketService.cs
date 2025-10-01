@@ -29,7 +29,7 @@ public class BasketService : IBasketService
 
     public async Task<Basket> CreateAsync(Guid userId, string name, bool isDefault, CancellationToken ct)
     {
-        var basket = new Basket(userId, name, isDefault);
+        Basket basket = new Basket(userId, name, isDefault);
         
         await _basketRepository.CreateAsync(basket, ct);
         await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.CreateBasket, BasketItemSource.UserPage);
@@ -38,7 +38,7 @@ public class BasketService : IBasketService
 
     public async Task<bool> RenameAsync(Guid basketId, string newName, CancellationToken ct)
     {
-        var basket = await _basketRepository.GetByIdAsync(basketId, ct);
+        Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
         if (basket == null) return false;
 
         basket.Rename(newName);
@@ -50,7 +50,7 @@ public class BasketService : IBasketService
 
     public async Task<bool> DeleteAsync(Guid basketId, CancellationToken ct)
     {
-        var basket = await _basketRepository.GetByIdAsync(basketId, ct);
+        Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
         if (basket == null || basket.IsDefault) return false;
 
         basket.Delete();
@@ -62,7 +62,7 @@ public class BasketService : IBasketService
 
     public async Task<bool> RestoreAsync(Guid basketId, CancellationToken ct)
     {
-        var basket = await _basketRepository.GetByIdAsync(basketId, ct);
+        Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
         if (basket == null) return false;
 
         basket.Restore();
@@ -74,7 +74,7 @@ public class BasketService : IBasketService
 
     public async Task<bool> ArchiveAsync(Guid basketId, CancellationToken ct)
     {
-        var basket = await _basketRepository.GetByIdAsync(basketId, ct);
+        Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
         if (basket == null) return false;
 
         basket.Archive();
@@ -86,7 +86,7 @@ public class BasketService : IBasketService
 
     public async Task<bool> ClearAsync(Guid basketId, CancellationToken ct)
     {
-        var basket = await _basketRepository.GetByIdAsync(basketId, ct);
+        Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
         if (basket == null) return false;
 
         basket.ClearItems();
@@ -100,33 +100,22 @@ public class BasketService : IBasketService
     {
         try
         {
-            // Retrieve basket
-            var basket = await _basketRepository.GetByIdAsync(basketId, ct);
-            if (basket == null)
-            {
-                throw new Exception("Basket not found");
-            }
+            Basket basket = await _basketRepository.GetByIdAsync(basketId, ct)
+                         ?? throw new InvalidOperationException("Basket not found");
 
             if (basket.HasItem(itemId))
-            {
-                throw new Exception("Item already in basket");
-            }
+                throw new InvalidOperationException("Item already in basket");
 
             // Retrieve item
-            var item = await _itemService.GetByIdAsync(itemId, ct);
-            if (item == null)
-            {
-                throw new Exception("Item not found");
-            }
+            Item item = await _itemService.GetByIdAsync(itemId, ct)
+                       ?? throw new InvalidOperationException("Item not found");
 
-            // Create and add basket item
-            var basketItem = new BasketItem(basket, item);
+            BasketItem basketItem = new BasketItem(basket, item);
+
             await _basketRepository.AddItemAsync(basketItem, ct);
 
-            // Update in-memory basket model
-            basket.AddItem(item);
+            basket.AddItem(item); // Update in-memory
 
-            // Log the operation
             await _logger.LogAsync(basket.UserId, basket.Id, item.Id, BasketAction.AddItem, source);
 
             return basket;
@@ -141,7 +130,7 @@ public class BasketService : IBasketService
 
     public async Task<bool> RemoveItemAsync(Guid basketId, Guid itemId, BasketItemSource source, CancellationToken ct)
     {
-        var basket = await _basketRepository.GetByIdAsync(basketId, ct);
+        Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
         if (basket == null) return false;
 
         // Update in-memory basket model

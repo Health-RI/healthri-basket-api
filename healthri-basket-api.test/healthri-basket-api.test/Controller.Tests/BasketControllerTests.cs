@@ -119,12 +119,14 @@ namespace healthri_basket_api.Tests.Controllers
             Guid basketId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
 
-            _basketServiceMock
-                .Setup(s => s.CreateAsync(expectedBasket.UserId, expectedBasket.Name, expectedBasket.IsDefault, _ct))
-                .ReturnsAsync(expectedBasket);
+            // Mock repository returns basket
+            _basketServiceMock.Setup(s => s.CreateAsync(expectedBasket.UserId, expectedBasket.Name, expectedBasket.IsDefault, _ct)).ReturnsAsync(expectedBasket);
+
+
+
 
             // Act
-            IActionResult result = await _basketController.Create(expectedBasket.UserId, expectedBasket.Name, _ct);
+            IActionResult result = await _basketController.Create(expectedBasket.UserId, expectedBasket.Name, expectedBasket.IsDefault, _ct);
 
             // Assert
             CreatedAtActionResult createdAtResult = Assert.IsType<CreatedAtActionResult>(result);
@@ -241,7 +243,7 @@ namespace healthri_basket_api.Tests.Controllers
             // Arrange
             Guid basketId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
-            bool expectedResponse = false;
+            bool expectedResponse = true;
 
             _basketServiceMock.Setup(s => s.ClearAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
 

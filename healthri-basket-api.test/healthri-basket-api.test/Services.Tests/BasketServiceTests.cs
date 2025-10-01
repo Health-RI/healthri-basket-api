@@ -8,22 +8,20 @@ namespace healthri_basket_api.test.Services.Tests
 {
     public class BasketServiceTests
     {
-        private BasketService _basketService;
-        private Mock<IBasketRepository> _basketRepositoryMock;
-        private Mock<IItemService> _itemServiceMock;
-        private Mock<ITransactionLogger> _loggerMock;
+        private readonly Mock<IBasketRepository> _basketRepositoryMock;
+        private readonly Mock<IItemService> _itemServiceMock;
+        private readonly Mock<ITransactionLogger> _loggerMock;
+        private readonly BasketService _basketService;
         private CancellationToken _ct;
 
         public BasketServiceTests()
         {
             _ct = new CancellationToken();
 
-            // Initialize mocks once for all tests
             _basketRepositoryMock = new Mock<IBasketRepository>();
             _itemServiceMock = new Mock<IItemService>();
             _loggerMock = new Mock<ITransactionLogger>();
 
-            // Instantiate the service using the mocks
             _basketService = new BasketService(
                 _basketRepositoryMock.Object,
                 _itemServiceMock.Object,
@@ -180,25 +178,45 @@ namespace healthri_basket_api.test.Services.Tests
         public async Task AddItemAsync_WhenItemAndBasketExist_ReturnsUpdatedBasketAndAddsItem()
         {
             // Arrange
-            Guid baskedId = Guid.NewGuid();
-            Basket basket = CreateBasketWithItems(baskedId);
-            Item item = new Item("Sample Item", "A description of the sample item.");
+            Guid basketId = Guid.NewGuid();
+            Item item = new Item("Item 4", "Description 4");
             BasketItemSource source = BasketItemSource.CatalogPage;
+            bool expectedResponse = true;
 
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
-            _itemServiceMock.Setup(s => s.GetByIdAsync(item.Id, _ct)).ReturnsAsync(item);
-            _basketRepositoryMock.Setup(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct)).ReturnsAsync(true);
+            // Mock basket (start empty)
+            var basket = CreateBasketWithItems(basketId);
+            var basketItem = new BasketItem(basket, item);
+            basket.Items.Clear();
+
+            // Mock repository returns basket
+            _basketRepositoryMock
+                .Setup(r => r.GetByIdAsync(basketId, _ct))
+                .ReturnsAsync(basket);
+
+            // Mock item service returns item
+            _itemServiceMock
+                .Setup(s => s.GetByIdAsync(item.Id, _ct))
+                .ReturnsAsync(item);
+
+            // Mock AddItemAsync returns true
+            _basketRepositoryMock
+                .Setup(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct))
+                .ReturnsAsync(expectedResponse);
+
 
             // Act
-            Basket? basketResult = await _basketService.AddItemAsync(basket.Id, item.Id, source, _ct);
+            Basket? result = await _basketService.AddItemAsync(basketId, item.Id, source, _ct);
 
             // Assert
-            Assert.NotNull(basketResult);
-            Assert.Single(basketResult.Items);
-            Assert.Equal(item.Id, basketResult.Items.First().ItemId);
+            Assert.NotNull(result);
+            Assert.Single(result.Items); // Expect 1 item added
+            Assert.Equal(item.Id, result.Items.First().ItemId);
 
-            _basketRepositoryMock.Verify(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct), Times.Once);
-            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basket.Id, item.Id, BasketAction.AddItem, source), Times.Once);
+            _basketRepositoryMock.Verify(r => r.AddItemAsync(It.Is<BasketItem>(
+                bi => bi.ItemId == item.Id && bi.BasketId == basket.Id
+            ), _ct), Times.Once);
+
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basketId, item.Id, BasketAction.AddItem, source), Times.Once);
         }
 
         [Fact]

@@ -150,6 +150,8 @@ public class BasketService : IBasketService
         await _basketRepository.UpdateAsync(basket, ct);
         await _logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.RemoveItem, source);
 
+        basket = await _basketRepository.GetByIdAsync(basketId, ct);
+        if (basket == null) return false;
         return true;
     }
 }

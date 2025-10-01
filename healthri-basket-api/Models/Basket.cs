@@ -35,9 +35,9 @@ public class Basket
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RemoveItem(Guid basketItemId)
+    public void RemoveItem(Guid itemId)
     {
-        BasketItem? basketItem = this.Items.FirstOrDefault(i => i.Id.Equals(basketItemId));
+        BasketItem? basketItem = this.Items.FirstOrDefault(i => i.ItemId.Equals(itemId));
         if (basketItem == null){
             return;
         }

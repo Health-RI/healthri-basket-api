@@ -37,8 +37,17 @@ public class BasketsController(IBasketService service) : ControllerBase
     public async Task<IActionResult> Create(Guid userId, [FromBody] string name, CancellationToken ct)
     {
         var basket = await service.CreateAsync(userId, name, false, ct);
-        return basket != null ? Ok(basket) : NotFound();
+
+        if (basket == null)
+            return NotFound();
+
+        return CreatedAtAction(
+            nameof(Get), // Assuming you have a GetById action
+            new { basketId = basket.Id },
+            basket);
     }
+
+
 
     [HttpPut("{basketId:guid}/rename")]
     public async Task<IActionResult> Rename(Guid basketId, [FromBody] string name, CancellationToken ct)
@@ -72,7 +81,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     public async Task<IActionResult> AddItem(Guid basketId, [FromBody] Guid itemId, CancellationToken ct)
     {
         var result = await service.AddItemAsync(basketId, itemId, BasketItemSource.CatalogPage, ct);
-        return result == null ? Ok(result) : NotFound();
+        return result != null ? Ok(result) : NotFound();
     }
 
     [HttpDelete("{basketId:guid}/items")]

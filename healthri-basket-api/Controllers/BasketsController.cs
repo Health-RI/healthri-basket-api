@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
+using healthri_basket_api.Controllers.DTOs;
 using healthri_basket_api.Interfaces;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace healthri_basket_api.Controllers;
 
@@ -35,11 +36,11 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpPost("{userId:guid}")]
-    public async Task<IActionResult> Create(Guid userId, [FromBody] string name, [FromBody] bool isDefault, CancellationToken ct)
+    public async Task<IActionResult> Create(Guid userId, [FromBody] CreateBasketDTO createBasketDTO, CancellationToken ct)
     {
         try
         {
-            Basket basket = await service.CreateAsync(userId, name, isDefault, ct);
+            Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, ct);
             return CreatedAtAction(
                 nameof(Get),
                 new { basketId = basket.Id },

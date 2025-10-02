@@ -1,4 +1,5 @@
 ﻿using healthri_basket_api.Controllers;
+using healthri_basket_api.Controllers.DTOs;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
@@ -118,6 +119,7 @@ namespace healthri_basket_api.Tests.Controllers
             // Arrange
             Guid basketId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
+            CreateBasketDTO createBasketDTO = new CreateBasketDTO{ Name = expectedBasket.Name, IsDefault = expectedBasket.IsDefault };
 
             // Mock repository returns basket
             _basketServiceMock.Setup(s => s.CreateAsync(expectedBasket.UserId, expectedBasket.Name, expectedBasket.IsDefault, _ct)).ReturnsAsync(expectedBasket);
@@ -126,7 +128,7 @@ namespace healthri_basket_api.Tests.Controllers
 
 
             // Act
-            IActionResult result = await _basketController.Create(expectedBasket.UserId, expectedBasket.Name, expectedBasket.IsDefault, _ct);
+            IActionResult result = await _basketController.Create(expectedBasket.UserId, createBasketDTO, _ct);
 
             // Assert
             CreatedAtActionResult createdAtResult = Assert.IsType<CreatedAtActionResult>(result);

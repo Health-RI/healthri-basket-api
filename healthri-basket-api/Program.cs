@@ -33,30 +33,24 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie(options =>
 {
-    options.LoginPath = "/Account/Login";
+    options.LoginPath = "/api/v1/baskets/auth";
 })
 .AddOpenIdConnect(options =>
 {
-    options.Authority = builder.Configuration.GetSection("OpenID")["Authority"];
-    options.ClientId = builder.Configuration.GetSection("OpenID")["ClientId"]; ;
-    options.ClientSecret = builder.Configuration.GetSection("OpenID")["ClientSecret"]; ; // client authentication must be enabled
+    options.Authority = "http://host.docker.internal:8081/realms/healthri-basket-api";
+    options.ClientId = "healthri-basket-api";
+    options.ClientSecret = "OX8hfXF6iY3UE5lkbEw165mbDrSXDyOK";
     options.ResponseType = "code";
     options.SaveTokens = true;
     options.Scope.Add("openid");
-    options.CallbackPath = "/swagger/index.html";
-    options.SignedOutCallbackPath = "/swagger/index.html";
+    options.CallbackPath = "/api/v1/baskets/auth";
+    options.SignedOutCallbackPath = "/api/v1/baskets/auth";
     options.TokenValidationParameters = new TokenValidationParameters
     {
         NameClaimType = "preferred_username",
         RoleClaimType = "roles"
     };
-
-    // For development only - disable HTTPS metadata validation
-    // In production, use explicit Authority configuration instead
-    if (builder.Environment.IsDevelopment())
-    {
-        options.RequireHttpsMetadata = false;
-    }
+    options.RequireHttpsMetadata = false; // only for development
 });
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
@@ -74,11 +68,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
 
 app.Run();
 

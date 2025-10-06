@@ -73,7 +73,7 @@ namespace healthri_basket_api.Tests.Controllers
             };
 
             // Act
-            IActionResult result = await _basketController.GetUserBaskets(_ct);
+            IActionResult result = await _basketController.GetUserBaskets(userId, _ct);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);

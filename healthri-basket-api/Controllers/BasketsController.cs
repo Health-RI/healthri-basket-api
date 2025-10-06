@@ -12,20 +12,20 @@ namespace healthri_basket_api.Controllers;
 [Route("api/v1/baskets")]
 public class BasketsController(IBasketService service) : ControllerBase
 {
-
-    [Authorize(Roles = "admin")]
-    [HttpGet("users/{userId}")]
-    public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
+    // this is to test authentication
+    [Authorize]
+    [HttpGet("auth")]
+    public IActionResult TestAuth(CancellationToken ct)
     {
-        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userObjectGuid))
-        {
+        
+        return Ok($"This is a private basket area for:");
+    }
 
-            var userObjectId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var baskets = await service.GetByUserIdAsync(userObjectGuid, ct);
-            return Ok(baskets);
-        }
-
-        return BadRequest();
+    [HttpGet("users/{userId}")]
+    public async Task<IActionResult> GetUserBaskets(Guid userId, CancellationToken ct)
+    {
+        IEnumerable<Basket> baskets = await service.GetByUserIdAsync(userId, ct);
+        return Ok(baskets);
     }
     
     [HttpGet("{basketId:guid}")]
@@ -50,8 +50,6 @@ public class BasketsController(IBasketService service) : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-
-
 
     [HttpPut("{basketId:guid}/rename")]
     public async Task<IActionResult> Rename(Guid basketId, [FromBody] string name, CancellationToken ct)

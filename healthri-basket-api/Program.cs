@@ -2,8 +2,7 @@ using healthri_basket_api.Database;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Repositories;
 using healthri_basket_api.Services;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -24,34 +23,28 @@ var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
 builder.Services.AddDbContextPool<AppDbContext>(opt =>
     opt.UseNpgsql(connectionString));
 
-// Authentication setup (https://learn.microsoft.com/en-us/aspnet/core/security/authentication/social/openid-connect?view=aspnetcore-7.0)
-// https://medium.com/@ahmed.gaduo_93938/how-to-implement-keycloak-authentication-in-a-net-core-application-ce8603698f24
-builder.Services.AddAuthentication(options =>
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(jwtOptions =>
 {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-})
-.AddCookie(options =>
-{
-    options.LoginPath = "/api/v1/baskets/auth";
-})
-.AddOpenIdConnect(options =>
-{
-    options.Authority = "http://host.docker.internal:8081/realms/healthri-basket-api";
-    options.ClientId = "healthri-basket-api";
-    options.ClientSecret = "OX8hfXF6iY3UE5lkbEw165mbDrSXDyOK";
-    options.ResponseType = "code";
-    options.SaveTokens = true;
-    options.Scope.Add("openid");
-    options.CallbackPath = "/api/v1/baskets/auth";
-    options.SignedOutCallbackPath = "/api/v1/baskets/auth";
-    options.TokenValidationParameters = new TokenValidationParameters
+    jwtOptions.RequireHttpsMetadata = false;
+    // Optional if the MetadataAddress is specified
+    jwtOptions.Authority = "http://localhost:8081/realms/healthri-basket-api";
+    jwtOptions.Audience = "account";
+    jwtOptions.TokenValidationParameters = new TokenValidationParameters
     {
-        NameClaimType = "preferred_username",
-        RoleClaimType = "roles"
-    };
-    options.RequireHttpsMetadata = false; // only for development
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidAudiences = ["account"],
+        ValidIssuers = ["http://localhost:8081/realms/healthri-basket-api"]
+    }; 
+    jwtOptions.MapInboundClaims = false;
 });
+
+
+
+
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore

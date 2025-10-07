@@ -4,7 +4,6 @@ using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace healthri_basket_api.Controllers;
 
@@ -12,14 +11,28 @@ namespace healthri_basket_api.Controllers;
 [Route("api/v1/baskets")]
 public class BasketsController(IBasketService service) : ControllerBase
 {
-    // this is to test authentication
+
+
+
+
+
+
+
     [Authorize]
     [HttpGet("auth")]
     public IActionResult TestAuth(CancellationToken ct)
     {
-        
         return Ok($"This is a private basket area for:");
     }
+
+
+
+
+
+
+
+
+
 
     [HttpGet("users/{userId}")]
     public async Task<IActionResult> GetUserBaskets(Guid userId, CancellationToken ct)

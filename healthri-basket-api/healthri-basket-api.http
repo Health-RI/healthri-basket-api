@@ -1,4 +1,4 @@
-@healthri_basket_api_HostAddress = http://localhost:8080
+@healthri_basket_api_HostAddress = http://localhost:8081
 
 # Get all baskets for a specific user
 GET {{healthri_basket_api_HostAddress}}/api/v1/baskets/00000000-0000-0000-0000-000000000001

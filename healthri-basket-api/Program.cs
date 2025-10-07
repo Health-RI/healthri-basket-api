@@ -29,7 +29,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 {
     jwtOptions.RequireHttpsMetadata = false;
     // Optional if the MetadataAddress is specified
-    jwtOptions.Authority = "http://localhost:8081/realms/healthri-basket-api";
+    jwtOptions.Authority = "http://keycloak:8080/realms/healthri-basket-api";
     jwtOptions.Audience = "account";
     jwtOptions.TokenValidationParameters = new TokenValidationParameters
     {
@@ -37,7 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateAudience = true,
         ValidateIssuerSigningKey = true,
         ValidAudiences = ["account"],
-        ValidIssuers = ["http://localhost:8081/realms/healthri-basket-api"]
+        ValidIssuers = ["http://localhost:8080/realms/healthri-basket-api"]
     }; 
     jwtOptions.MapInboundClaims = false;
 });

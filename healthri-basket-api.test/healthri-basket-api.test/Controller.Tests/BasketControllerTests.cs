@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System.Security.Claims;
 
-namespace healthri_basket_api.Tests.Controllers
+namespace healthri_basket_api.test.Controller.Tests
 {
     public class BasketsControllerTests
     {
@@ -76,7 +76,7 @@ namespace healthri_basket_api.Tests.Controllers
             IActionResult result = await _basketController.GetUserBaskets(_ct);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
+            OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(userBaskets, okResult.Value);
         }
 

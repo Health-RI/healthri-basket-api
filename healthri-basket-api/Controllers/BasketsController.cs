@@ -13,21 +13,7 @@ namespace healthri_basket_api.Controllers;
 [Route("api/v1/baskets")]
 public class BasketsController(IBasketService service) : ControllerBase
 {
-    [HttpGet("auth")]
-    public IActionResult TestAuth(CancellationToken ct)
-    {
-        var userId = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userId))
-        {
-            return Unauthorized("User ID not found in token.");
-        }
-
-        Console.WriteLine($"Authenticated user: {userId}");
-
-        return Ok($"This is a private basket area for user ID: {userId}");
-    }
-
-    [HttpGet("users/{userId}")]
+    [HttpGet("users")]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
         string userIdFromToken = User.FindFirst("sub")?.Value;

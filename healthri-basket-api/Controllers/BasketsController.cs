@@ -4,39 +4,40 @@ using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace healthri_basket_api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/baskets")]
 public class BasketsController(IBasketService service) : ControllerBase
 {
-
-
-
-
-
-
-
-    [Authorize]
     [HttpGet("auth")]
     public IActionResult TestAuth(CancellationToken ct)
     {
-        return Ok($"This is a private basket area for:");
+        var userId = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("User ID not found in token.");
+        }
+
+        Console.WriteLine($"Authenticated user: {userId}");
+
+        return Ok($"This is a private basket area for user ID: {userId}");
     }
 
-
-
-
-
-
-
-
-
-
     [HttpGet("users/{userId}")]
-    public async Task<IActionResult> GetUserBaskets(Guid userId, CancellationToken ct)
+    public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
+        string userIdFromToken = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdFromToken))
+        {
+            return Unauthorized("User ID not found in token.");
+        }
+        Guid userId = new Guid(userIdFromToken);
+
+
         IEnumerable<Basket> baskets = await service.GetByUserIdAsync(userId, ct);
         return Ok(baskets);
     }
@@ -49,10 +50,17 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpPost("{userId:guid}")]
-    public async Task<IActionResult> Create(Guid userId, [FromBody] CreateBasketDTO createBasketDTO, CancellationToken ct)
+    public async Task<IActionResult> Create([FromBody] CreateBasketDTO createBasketDTO, CancellationToken ct)
     {
         try
         {
+            string userIdFromToken = User.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userIdFromToken))
+            {
+                return Unauthorized("User ID not found in token.");
+            }
+            Guid userId = new Guid(userIdFromToken);
+
             Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, ct);
             return CreatedAtAction(
                 nameof(Get),

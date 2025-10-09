@@ -60,11 +60,11 @@ namespace healthri_basket_api.Tests.Controllers
 
             _basketServiceMock.Setup(s => s.GetByUserIdAsync(userId, _ct)).ReturnsAsync(userBaskets);
 
-            // Mock authenticated user with "admin" role
+            // Mock authenticated user with "sub" claim
             ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
             [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Role, "admin")
+                new Claim("sub", userId.ToString()),
+                new Claim(ClaimTypes.Role, "user")
             ], "mock"));
 
             _basketController.ControllerContext = new ControllerContext
@@ -73,7 +73,7 @@ namespace healthri_basket_api.Tests.Controllers
             };
 
             // Act
-            IActionResult result = await _basketController.GetUserBaskets(userId, _ct);
+            IActionResult result = await _basketController.GetUserBaskets(_ct);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -117,24 +117,44 @@ namespace healthri_basket_api.Tests.Controllers
         public async Task Create_WhenValidInput_ReturnsCreatedAtActionWithBasket()
         {
             // Arrange
+            Guid userId = Guid.NewGuid();
             Guid basketId = Guid.NewGuid();
-            Basket expectedBasket = CreateBasketWithItems(basketId);
-            CreateBasketDTO createBasketDTO = new CreateBasketDTO{ Name = expectedBasket.Name, IsDefault = expectedBasket.IsDefault };
+            CreateBasketDTO createBasketDTO = new CreateBasketDTO
+            {
+                Name = "My Basket",
+                IsDefault = true
+            };
 
-            // Mock repository returns basket
-            _basketServiceMock.Setup(s => s.CreateAsync(expectedBasket.UserId, expectedBasket.Name, expectedBasket.IsDefault, _ct)).ReturnsAsync(expectedBasket);
+            Basket expectedBasket = new Basket(userId, createBasketDTO.Name, createBasketDTO.IsDefault)
+            {
+                Id = basketId
+            };
 
+            // Mock authenticated user with "sub" claim
+            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim("sub", userId.ToString()),
+                new Claim(ClaimTypes.Role, "user")
+            ], "mock"));
 
+            _basketController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
 
+            _basketServiceMock
+                .Setup(s => s.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, _ct))
+                .ReturnsAsync(expectedBasket);
 
             // Act
-            IActionResult result = await _basketController.Create(expectedBasket.UserId, createBasketDTO, _ct);
+            IActionResult result = await _basketController.Create(createBasketDTO, _ct);
 
             // Assert
             CreatedAtActionResult createdAtResult = Assert.IsType<CreatedAtActionResult>(result);
             Basket returnedBasket = Assert.IsType<Basket>(createdAtResult.Value);
             Assert.Equal(expectedBasket, returnedBasket);
         }
+
 
         [Fact]
         public async Task Rename_WhenBasketExists_ReturnsOk()

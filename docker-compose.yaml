@@ -1,4 +1,4 @@
-services:
+﻿services:
   healthri-basket-api:
     image: healthri-basket-api
     container_name: healthri-basket-api
@@ -7,6 +7,9 @@ services:
       dockerfile: ./healthri-basket-api/Dockerfile
     ports:
       - 8081:8080
+    env_file: 
+        - path: ./healthri-basket-api/.env
+          required: true
     depends_on: [keycloak, db, adminer]
 
   keycloak:
@@ -28,6 +31,7 @@ services:
     environment:
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
+      POSTGRES_DB: healthri_basket_api
     volumes:
       - pgdata:/var/lib/postgresql/data 
  

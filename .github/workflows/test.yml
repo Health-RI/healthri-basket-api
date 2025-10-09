@@ -1,0 +1,57 @@
+name: RUN TESTS
+
+on: push
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
+
+      - name: Test
+        run: dotnet test --configuration ${{ matrix.configuration }} --no-build --collect "XPlat Code Coverage" --logger "trx"
+
+      - name: Install reportgenerator tool
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          REPORTS=$(find . -type f -name 'coverage.cobertura.xml' -print | tr '\n' ';')
+          reportgenerator -reports:"$REPORTS" -targetdir:"CoverageReport" -reporttypes:"HtmlInline;Cobertura"
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: CoverageReport-${{ matrix.configuration }}
+          path: CoverageReport/**
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults-${{ matrix.configuration }}
+          path: '**/TestResults/*.trx'
+
+      - name: Add coverage link to summary
+        run: |
+          echo "### Coverage Report (${{ matrix.configuration }})" >> $GITHUB_STEP_SUMMARY
+          echo "- Download artifact **CoverageReport-${{ matrix.configuration }}** to view HTML report." >> $GITHUB_STEP_SUMMARY

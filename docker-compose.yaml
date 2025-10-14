@@ -1,10 +1,47 @@
 ﻿services:
   healthri-basket-api:
     image: healthri-basket-api
+    container_name: healthri-basket-api
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./healthri-basket-api/Dockerfile
     ports:
-      - 8080:8080
-      - 8081:8081
+      - 8081:8080
+    env_file: 
+        - path: ./healthri-basket-api/.env
+          required: true
+    depends_on: [keycloak, db, adminer]
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.4
+    container_name: keycloak
+    ports:
+      - "8080:8080"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    command: ["start-dev"]
+
+  db:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: healthri_basket_api
+    volumes:
+      - pgdata:/var/lib/postgresql/data 
+ 
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - 8082:8080
+
+volumes:
+  keycloak_data:
+  pgdata:  

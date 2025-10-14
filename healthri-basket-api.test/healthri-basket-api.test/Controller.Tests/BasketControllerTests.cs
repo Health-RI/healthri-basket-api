@@ -1,283 +1,378 @@
-﻿using healthri_basket_api.Controllers;
+using healthri_basket_api.Controllers;
+using healthri_basket_api.Controllers.DTOs;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
+using healthri_basket_api.Models.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using System.Security.Claims;
 
 namespace healthri_basket_api.test.Controller.Tests
 {
     public class BasketsControllerTests
     {
-        private readonly Mock<IBasketService> _mockService;
-        private readonly BasketsController _controller;
+        private readonly Mock<IBasketService> _basketServiceMock;
+        private readonly BasketsController _basketController;
+        private readonly CancellationToken _ct;
 
         public BasketsControllerTests()
         {
-            _mockService = new Mock<IBasketService>();
-            _controller = new BasketsController(_mockService.Object);
+            _ct = new CancellationToken();
+
+            // Initialize mocks once for all tests
+            _basketServiceMock = new Mock<IBasketService>();
+
+            // Instantiate the controller using the mocks
+            _basketController = new BasketsController(_basketServiceMock.Object);
+        }
+
+        private Basket CreateBasketWithItems(Guid? basketId)
+        {
+            Guid userId = Guid.NewGuid();
+            var basket = new Basket(userId, "TestBasket", true);
+            var items = new List<Item>
+            {
+                new Item("Item 1", "Description 1"),
+                new Item("Item 2", "Description 2"),
+                new Item("Item 3", "Description 3"),
+            };
+            foreach (var item in items)
+            {
+                basket.AddItem(item);
+            }
+
+            if (basketId.HasValue)
+            {
+                basket.Id = basketId.Value;
+            }
+
+            return basket;
         }
 
         [Fact]
-        // Should return 200 status code and all baskets owned by user
-        public async Task GetUserBaskets()
+        public async Task GetUserBaskets_WhenCalled_ReturnsOkWithUserBaskets()
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            List<Basket> userBaskets = new List<Basket> { new() { Id = Guid.NewGuid(), Name = "Test" } };
-            _mockService.Setup(s => s.GetBasketsAsync(userId)).ReturnsAsync(userBaskets);
+            List<Basket> userBaskets = new List<Basket> { new Basket(userId, "User basket", true) };
+
+            _basketServiceMock.Setup(s => s.GetByUserIdAsync(userId, _ct)).ReturnsAsync(userBaskets);
+
+            // Mock authenticated user 
+            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            ], "mock"));
+
+            _basketController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
 
             // Act
-            IActionResult result = await _controller.GetUserBaskets(userId);
-            
+            IActionResult result = await _basketController.GetUserBaskets(_ct);
+
             // Assert
             OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(userBaskets, okResult.Value);
         }
 
         [Fact]
-        // Should return 200 status code and basket found by id
-        public async Task GetBasketByIdTest()
+        public async Task GetById_WhenBasketExists_ReturnsOkWithBasket()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
-            Basket basket = new() { Id = id, Name = "Sample" };
-            _mockService.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(basket);
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
+
+            _basketServiceMock.Setup(s => s.GetByIdAsync(expectedBasket.Id, _ct)).ReturnsAsync(expectedBasket);
 
             // Act
-            IActionResult result = await _controller.Get(id);
+            IActionResult result = await _basketController.Get(expectedBasket.Id, _ct);
 
             // Assert
-            OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(basket, okResult.Value);
+            OkObjectResult actionResult = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(expectedBasket, actionResult.Value);
         }
 
         [Fact]
-        // Should return 404 status code because basket doesn't exist
-        public async Task GetBasketById_BasketNotExist()
+        public async Task GetById_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
-            Basket? basket = null;
-            _mockService.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(basket);
+            Guid basketId = Guid.NewGuid();
+            Basket? expectedBasket = null;
+
+            _basketServiceMock.Setup(s => s.GetByIdAsync(basketId, _ct)).ReturnsAsync(expectedBasket);
 
             // Act
-            IActionResult result = await _controller.Get(id);
+            IActionResult result = await _basketController.Get(basketId, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
-        // Should return 201 status code, creating and returning the newly created basket
-        public async Task CreateNewBasket()
+        public async Task Create_WhenValidInput_ReturnsCreatedAtActionWithBasket()
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            string name = "New Basket";
-            Basket basket = new Basket { Id = Guid.NewGuid(), Name = name };
+            Guid basketId = Guid.NewGuid();
+            CreateBasketDTO createBasketDTO = new CreateBasketDTO
+            {
+                Name = "My Basket",
+                IsDefault = true
+            };
 
-            _mockService.Setup(s => s.CreateBasketAsync(userId, name, false)).ReturnsAsync(basket);
+            Basket expectedBasket = new Basket(userId, createBasketDTO.Name, createBasketDTO.IsDefault)
+            {
+                Id = basketId
+            };
+
+            // Mock authenticated user 
+            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            ], "mock"));
+
+            _basketController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            _basketServiceMock
+                .Setup(s => s.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, _ct))
+                .ReturnsAsync(expectedBasket);
 
             // Act
-            IActionResult result = await _controller.Create(userId, name);
+            IActionResult result = await _basketController.Create(createBasketDTO, _ct);
 
             // Assert
-            CreatedAtActionResult contentResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal(basket, contentResult.Value);
+            CreatedAtActionResult createdAtResult = Assert.IsType<CreatedAtActionResult>(result);
+            Basket returnedBasket = Assert.IsType<Basket>(createdAtResult.Value);
+            Assert.Equal(expectedBasket, returnedBasket);
         }
 
+
         [Fact]
-        // Should return 200 status code, renaming the given basket.
-        public async Task RenameBasket()
+        public async Task Rename_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
-            string name = "Updated Name";
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
+            string newName = "New basket name";
+            bool expectedResponse = true;
 
-            _mockService.Setup(s => s.RenameBasketAsync(id, name)).ReturnsAsync(true);
+            _basketServiceMock.Setup(s => s.RenameAsync(basketId, newName, _ct)).ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.Rename(id, name);
+            IActionResult result = await _basketController.Rename(basketId, newName, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
         }
 
         [Fact]
-        // Should return 404 status code, because basket doesn't exist.
-        public async Task RenameBasket_BasketNotExist()
+        public async Task Rename_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
-            string name = "Doesn't Exist";
-            _mockService.Setup(s => s.RenameBasketAsync(id, name)).ReturnsAsync(false);
+            Guid basketId = Guid.NewGuid();
+            string newName = "New basket name";
+            bool expectedResponse = false;
+
+            _basketServiceMock.Setup(s => s.RenameAsync(basketId, newName, _ct)).ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.Rename(id, name);
+            IActionResult result = await _basketController.Rename(basketId, newName, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
-        // Should return 200 status code, successfully archiving the basket.
-        public async Task ArchiveBasket()
+        public async Task Archive_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = true;
-            _mockService.Setup(s => s.ArchiveBasketAsync(id)).ReturnsAsync(expectedResponse);
+
+            _basketServiceMock.Setup(s => s.ArchiveAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.Archive(id);
+            IActionResult result = await _basketController.Archive(basketId, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
         }
 
         [Fact]
-        // Should return 200 status code, successfully restoring the basket.
-        public async Task RestoreBasket()
+        public async Task Restore_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = true;
-            _mockService.Setup(s => s.RestoreBasketAsync(id)).ReturnsAsync(expectedResponse);
+
+            _basketServiceMock.Setup(s => s.RestoreAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.Restore(id);
+            IActionResult result = await _basketController.Restore(basketId, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
         }
 
         [Fact]
-        // Should return 200 status code, successfully deleting the basket.
-        public async Task DeleteBasket()
+        public async Task Delete_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = true;
-            _mockService.Setup(s => s.DeleteBasketAsync(id)).ReturnsAsync(expectedResponse);
+
+            _basketServiceMock.Setup(s => s.DeleteAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.Delete(id);
+            IActionResult result = await _basketController.Delete(basketId, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
         }
 
         [Fact]
-        // Should retunr 404 status code, because basket doesn't exist.
-        public async Task DeleteBasket_BasketNotExist()
+        public async Task Delete_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = false;
-            _mockService.Setup(s => s.DeleteBasketAsync(id)).ReturnsAsync(expectedResponse);
+
+            _basketServiceMock.Setup(s => s.DeleteAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.Delete(id);
+            IActionResult result = await _basketController.Delete(basketId, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
-        // Should return 200 status code, successfully clearing all items from the basket.
-        public async Task ClearBasket()
+        public async Task Clear_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = true;
-            _mockService.Setup(s => s.ClearBasketAsync(id)).ReturnsAsync(expectedResponse);
+
+            _basketServiceMock.Setup(s => s.ClearAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.Clear(id);
+            IActionResult result = await _basketController.Clear(basketId, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
         }
 
         [Fact]
-        // Should return 404 status code, because basket doesn't exist.
-        public async Task ClearBasket_BasketNotExist()
+        public async Task Clear_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = false;
-            _mockService.Setup(s => s.ClearBasketAsync(id)).ReturnsAsync(expectedResponse);
+
+            _basketServiceMock.Setup(s => s.ClearAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.Clear(id);
+            IActionResult result = await _basketController.Clear(basketId, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
-        // Should return 200 status code, successfully adding basketItem to the basket.
-        public async Task AddItemToBasket()
+        public async Task AddItem_WhenItemIsAddedSuccessfully_ReturnsOkWithUpdatedBasket()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
-            bool expectedResponse = true;
-            BasketItem item = new BasketItem { ItemId = "abc123", Source = "sourceA" };
-            _mockService.Setup(s => s.AddItemAsync(id, item.ItemId, item.Source)).ReturnsAsync(expectedResponse);
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Item item = new Item("title a", "description a");
+            expectedBasket.ClearItems(); // Start with an empty basket for this test
+            expectedBasket.AddItem(item);
+
+            _basketServiceMock
+                .Setup(s => s.AddItemAsync(expectedBasket.Id, item.Id, BasketItemSource.CatalogPage, _ct))
+                .ReturnsAsync(expectedBasket);
 
             // Act
-            IActionResult result = await _controller.AddItem(id, item);
+            IActionResult result = await _basketController.AddItem(expectedBasket.Id, item.Id, _ct);
 
             // Assert
-            Assert.IsType<OkResult>(result);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnedBasket = Assert.IsType<Basket>(okResult.Value);
+
+            Assert.Equal(expectedBasket, returnedBasket);
+
+            Item firstItem = returnedBasket.Items[0].Item;
+            Assert.Equal(firstItem.Id, item.Id);
+            Assert.Equal(firstItem.Title, item.Title);
+            Assert.Equal(firstItem.Description, item.Description);
         }
 
+
         [Fact]
-        // Should return 404 status code, because basketItem doesn't exist.
-        public async Task AddItemToBasket_ItemNotExist()
+        public async Task AddItem_WhenItemOrBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
-            bool expectedResponse = false;
-            BasketItem item = new BasketItem { ItemId = "notfound", Source = "sourceB" };
-            _mockService.Setup(s => s.AddItemAsync(id, item.ItemId, item.Source)).ReturnsAsync(expectedResponse);
+            Guid basketId = Guid.NewGuid();
+            Guid itemId = Guid.NewGuid();
+
+            _basketServiceMock.Setup(s => s.AddItemAsync(basketId, itemId, BasketItemSource.CatalogPage, _ct));
 
             // Act
-            IActionResult result = await _controller.AddItem(id, item);
+            IActionResult result = await _basketController.AddItem(basketId, itemId, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
-        // Should return 200 status code, successfully removing the item from the basket.
-        public async Task RemoveItemFromBasket()
+        public async Task RemoveItem_WhenItemIsRemovedSuccessfully_ReturnsOk()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Item itemToRemove = expectedBasket.Items[0].Item;
             bool expectedResponse = true;
-            string itemId = "item123";
-            _mockService.Setup(s => s.RemoveItemAsync(id, itemId)).ReturnsAsync(expectedResponse);
+            expectedBasket.RemoveItem(itemToRemove.Id);
+
+
+            _basketServiceMock
+                .Setup(s => s.RemoveItemAsync(basketId, itemToRemove.Id, BasketItemSource.CatalogPage, _ct)) 
+                .ReturnsAsync(expectedResponse);
 
             // Act
-            IActionResult result = await _controller.RemoveItem(id, itemId);
+            IActionResult result = await _basketController.RemoveItem(basketId, itemToRemove.Id, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
+            Assert.Equal(2, expectedBasket.Items.Count);
+            Assert.DoesNotContain(expectedBasket.Items, bi => bi.Item.Id == itemToRemove.Id);
         }
 
+
         [Fact]
-        // Should return 404 status code, because basketItem to remove was not found in the basket.
-        public async Task RemoveItemFromBasket_ItemNotExist()
+        public async Task RemoveItem_WhenItemDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid id = Guid.NewGuid();
+            Guid basketId = Guid.NewGuid();
+            Guid itemId = Guid.NewGuid();
             bool expectedResponse = false;
-            string itemId = "missingItem";
-            _mockService.Setup(s => s.RemoveItemAsync(id, itemId)).ReturnsAsync(expectedResponse);
 
+            _basketServiceMock.Setup(s => s.RemoveItemAsync(basketId, itemId, BasketItemSource.UserPage, _ct)).ReturnsAsync(expectedResponse);
+            
             // Act
-            IActionResult result = await _controller.RemoveItem(id, itemId);
+            IActionResult result = await _basketController.RemoveItem(basketId, itemId, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);

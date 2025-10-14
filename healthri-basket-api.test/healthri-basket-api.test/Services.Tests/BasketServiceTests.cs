@@ -1,208 +1,244 @@
 ﻿using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
+using healthri_basket_api.Models.Enums;
 using healthri_basket_api.Services;
 using Moq;
 
 namespace healthri_basket_api.test.Services.Tests
 {
-    public class BasketServiceTests 
+    public class BasketServiceTests
     {
-        private readonly Mock<IBasketRepository> _basketRepository;
-        private readonly Mock<ITransactionLogger> _logger;
+        private readonly Mock<IBasketRepository> _basketRepositoryMock;
+        private readonly Mock<IItemService> _itemServiceMock;
+        private readonly Mock<ITransactionLogger> _loggerMock;
         private readonly BasketService _basketService;
-        
+        private readonly CancellationToken _ct;
+
         public BasketServiceTests()
         {
-            _basketRepository = new Mock<IBasketRepository>();
-            _logger = new Mock<ITransactionLogger>();
-            _basketService = new BasketService(_basketRepository.Object, _logger.Object);
+            _ct = new CancellationToken();
+
+            _basketRepositoryMock = new Mock<IBasketRepository>();
+            _itemServiceMock = new Mock<IItemService>();
+            _loggerMock = new Mock<ITransactionLogger>();
+
+            _basketService = new BasketService(
+                _basketRepositoryMock.Object,
+                _itemServiceMock.Object,
+                _loggerMock.Object
+            );
         }
 
-        private Basket CreateDefaultBasket()
+        private Basket CreateBasketWithItems(Guid? basketId)
         {
-            List<BasketItem> basketItems = CreateDefaultBasketItems();
-
-            Basket basket = new Basket
+            Guid userId = Guid.NewGuid();
+            var basket = new Basket(userId, "TestBasket", true);
+            var items = new List<Item>
             {
-                Id = Guid.NewGuid(),
-                UserUuid = Guid.NewGuid(),
-                Name = "DefaultBasketName",
-                IsDefault = false,
-                Status = BasketStatus.Active,
-                Items = basketItems,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                ArchivedAt = null,
-                DeletedAt = null
+                new Item("Item 1", "Description 1"),
+                new Item("Item 2", "Description 2"),
+                new Item("Item 3", "Description 3"),
             };
+            foreach (var item in items)
+            {
+                basket.AddItem(item);
+            }
 
-            // Mock the repository to return this basket when queried by its ID
-            _basketRepository.Setup(r => r.GetByIdAsync(basket.Id)).ReturnsAsync(basket);
+            if (basketId.HasValue)
+            {
+                basket.Id = basketId.Value;
+            }
 
             return basket;
         }
 
-        private List<BasketItem> CreateDefaultBasketItems()
-        {
-            return new List<BasketItem>
-            {
-                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi1", ItemId = "111"},
-                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi2", ItemId = "222"},
-                new BasketItem { AddedAt = DateTime.UtcNow, Source = "bi3", ItemId = "333"},
-            };
-        }
-
-
-        // Should return newly created basket with correct properties
         [Fact]
-        public async Task CreateBasket()
+        public async Task CreateAsync_WhenCalled_ReturnsActiveBasketWithCorrectDetails()
         {
             // Arrange
-            Guid testUserUuid = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             string name = "Test Basket";
             bool isDefault = false;
             BasketStatus expectedStatus = BasketStatus.Active;
 
             // Act 
-            Basket createdBasket = await _basketService.CreateBasketAsync(testUserUuid, name, isDefault);
+            Basket createdBasket = await _basketService.CreateAsync(userId, name, isDefault, _ct);
 
             // Assert
             Assert.NotNull(createdBasket);
             Assert.Equal(name, createdBasket.Name);
             Assert.Equal(isDefault, createdBasket.IsDefault);
-            Assert.Equal(testUserUuid, createdBasket.UserUuid);
+            Assert.Equal(userId, createdBasket.UserId);
             Assert.Equal(expectedStatus, createdBasket.Status);
             Assert.Empty(createdBasket.Items);
+
+            _basketRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Basket>(), _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(userId, createdBasket.Id, Guid.Empty, BasketAction.CreateBasket, BasketItemSource.UserPage), Times.Once);
         }
 
-        // Should rename the basket name and return true
         [Fact]
-        public async Task RenameBasket()
+        public async Task RenameAsync_WhenBasketExists_ReturnsTrueAndUpdatesName()
         {
             // Arrange
-            Basket basket = CreateDefaultBasket();
-            DateTime startTime = DateTime.UtcNow;
+            Guid baskedId = Guid.NewGuid();
+            Basket basket = CreateBasketWithItems(baskedId);
             string newName = "NewBasketName";
+            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            bool success = await _basketService.RenameBasketAsync(basket.Id, newName);
+            bool success = await _basketService.RenameAsync(basket.Id, newName, _ct);
 
             // Assert
             Assert.True(success);
             Assert.Equal(newName, basket.Name);
-            Assert.True(basket.UpdatedAt >= startTime);
+            
+            _basketRepositoryMock.Verify(r => r.UpdateAsync(basket, _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage), Times.Once);
         }
 
         [Fact]
-        // Should return true if basket is successfully deleted
-        public async Task DeleteBasket()
+        public async Task DeleteAsync_WhenBasketIsNotDefault_ReturnsTrueAndSetsStatusToDeleted()
         {
-            // Arrange 
-            Basket basket = CreateDefaultBasket();
-            DateTime startTime = DateTime.UtcNow;
+            // Arrange
+            Guid baskedId = Guid.NewGuid();
+            Basket basket = CreateBasketWithItems(baskedId);
+            basket.IsDefault = false;
+            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act
-            bool success = await _basketService.DeleteBasketAsync(basket.Id);
+            bool success = await _basketService.DeleteAsync(basket.Id, _ct);
 
             // Assert
             Assert.True(success);
             Assert.Equal(BasketStatus.Deleted, basket.Status);
-            Assert.True(basket.UpdatedAt >= startTime);
-            Assert.True(basket.DeletedAt >= startTime);
+            
+            _basketRepositoryMock.Verify(r => r.UpdateAsync(basket, _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage), Times.Once);
         }
 
         [Fact]
-        // Should return true if BasketStatus is successfully restored (e.g: from any status, to Active)
-        public async Task RestoreBasket()
+        public async Task RestoreAsync_WhenBasketExists_ReturnsTrueAndSetsStatusToActive()
         {
             // Arrange
-            Basket basket = CreateDefaultBasket();
-            DateTime startTime = DateTime.UtcNow;
+            Guid baskedId = Guid.NewGuid();
+            Basket basket = CreateBasketWithItems(baskedId);
+            basket.Status = BasketStatus.Archived;
+            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            bool success = await _basketService.RestoreBasketAsync(basket.Id);
+            bool success = await _basketService.RestoreAsync(basket.Id, _ct);
 
             // Assert
             Assert.True(success);
-            Assert.NotNull(basket);
-            Assert.True(basket.UpdatedAt >= startTime);
+            Assert.Equal(BasketStatus.Active, basket.Status);
+            
+            _basketRepositoryMock.Verify(r => r.UpdateAsync(basket, _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage), Times.Once);
         }
 
         [Fact]
-        // Should return true if BasketStatus is successfully archived (e.g: from any state, to Archived)
-        public async Task ArchiveBasket()
+        public async Task ArchiveAsync_WhenBasketExists_ReturnsTrueAndSetsStatusToArchived()
         {
             // Arrange
-            Basket basket = CreateDefaultBasket();
-            DateTime startTime = DateTime.UtcNow;
+            Guid baskedId = Guid.NewGuid();
+            Basket basket = CreateBasketWithItems(baskedId);
+            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            bool success = await _basketService.ArchiveBasketAsync(basket.Id);
+            bool success = await _basketService.ArchiveAsync(basket.Id, _ct);
 
             // Assert
             Assert.True(success);
             Assert.Equal(BasketStatus.Archived, basket.Status);
-            Assert.True(basket.ArchivedAt >= startTime);
-            Assert.True(basket.UpdatedAt >= startTime);
-
+            
+            _basketRepositoryMock.Verify(r => r.UpdateAsync(basket, _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage), Times.Once);
         }
 
         [Fact]
-        // Should return true if basket is successfully cleared of all items
-        public async Task ClearBasketItems()
+        public async Task ClearAsync_WhenBasketExists_ReturnsTrueAndRemovesAllItems()
         {
             // Arrange
-            Basket basket = CreateDefaultBasket();
-            DateTime startTime = DateTime.UtcNow;
+            Guid baskedId = Guid.NewGuid();
+            Basket basket = CreateBasketWithItems(baskedId);
+            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            bool success = await _basketService.ClearBasketAsync(basket.Id);
+            var success = await _basketService.ClearAsync(basket.Id, _ct);
 
             // Assert
+            Assert.True(success);
             Assert.Empty(basket.Items);
-            Assert.True(basket.UpdatedAt >= startTime);
+            
+            _basketRepositoryMock.Verify(r => r.UpdateAsync(basket, _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage), Times.Once);
         }
 
         [Fact]
-        // Should return true if item is successfully added to basket
-        public async Task AddItemToBasket()
+        public async Task AddItemAsync_WhenItemAndBasketExist_ReturnsUpdatedBasketAndAddsItem()
         {
             // Arrange
-            Basket basket = CreateDefaultBasket();
-            DateTime startTime = DateTime.UtcNow;
-            BasketItem basketItem = new BasketItem();
-            basketItem.ItemId = "444";
-            basketItem.Source = "bi4";
-            int expectedItems = 1;
+            Guid basketId = Guid.NewGuid();
+            Item item = new Item("Item 4", "Description 4");
+            BasketItemSource source = BasketItemSource.CatalogPage;
+            bool expectedResponse = true;
 
-            // Act 
-            basket.Items = [];
-            bool success = await _basketService.AddItemAsync(basket.Id, basketItem.ItemId, basketItem.Source);
+            // Mock basket (start empty)
+            var basket = CreateBasketWithItems(basketId);
+            var basketItem = new BasketItem(basket, item);
+            basket.Items.Clear();
+
+            // Mock repository returns basket
+            _basketRepositoryMock
+                .Setup(r => r.GetByIdAsync(basketId, _ct))
+                .ReturnsAsync(basket);
+
+            // Mock item service returns item
+            _itemServiceMock
+                .Setup(s => s.GetByIdAsync(item.Id, _ct))
+                .ReturnsAsync(item);
+
+            // Mock AddItemAsync returns true
+            _basketRepositoryMock
+                .Setup(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct))
+                .ReturnsAsync(expectedResponse);
+
+
+            // Act
+            Basket? result = await _basketService.AddItemAsync(basketId, item.Id, source, _ct);
 
             // Assert
-            Assert.True(basket.Items.Count == expectedItems);
-            Assert.True(basket.UpdatedAt >= startTime);
-            Assert.Equal(basket.Items.First().ItemId, basketItem.ItemId);
-            Assert.Equal(basket.Items.First().Source, basketItem.Source);
-            Assert.True(basket.Items.First().AddedAt >= startTime);
+            Assert.NotNull(result);
+            Assert.Single(result.Items); // Expect 1 item added
+            Assert.Equal(item.Id, result.Items.First().ItemId);
+
+            _basketRepositoryMock.Verify(r => r.AddItemAsync(It.Is<BasketItem>(
+                bi => bi.ItemId == item.Id && bi.BasketId == basket.Id
+            ), _ct), Times.Once);
+
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basketId, item.Id, BasketAction.AddItem, source), Times.Once);
         }
 
         [Fact]
-        // Should return true if item is successfully removed from basket
-        public async Task RemoveItemFromBasket()
+        public async Task RemoveItemAsync_WhenItemExistsInBasket_ReturnsTrueAndRemovesItem()
         {
             // Arrange
-            Basket basket = CreateDefaultBasket();
-            DateTime startTime = DateTime.UtcNow;
-            string basketItemId = "333";
-            int expectedItems = 2;
+            Guid baskedId = Guid.NewGuid();
+            Basket basket = CreateBasketWithItems(baskedId);
+            Guid itemToRemoveId = basket.Items.First().ItemId;
+            BasketItemSource source = BasketItemSource.UserPage;
+
+            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            bool success = await _basketService.RemoveItemAsync(basket.Id, basketItemId);
+            var success = await _basketService.RemoveItemAsync(basket.Id, itemToRemoveId, source, _ct);
 
             // Assert
-            Assert.True(basket.Items.Count == expectedItems);
-            Assert.True(basket.UpdatedAt >= startTime);
+            Assert.True(success);
+            Assert.DoesNotContain(basket.Items, bi => bi.ItemId == itemToRemoveId);
+            
+            _basketRepositoryMock.Verify(r => r.UpdateAsync(basket, _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basket.Id, itemToRemoveId, BasketAction.RemoveItem, source), Times.Once);
         }
     }
 }

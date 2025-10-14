@@ -59,11 +59,10 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.GetByUserIdAsync(userId, _ct)).ReturnsAsync(userBaskets);
 
-            // Mock authenticated user with "sub" claim
+            // Mock authenticated user 
             ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
             [
-                new Claim("sub", userId.ToString()),
-                new Claim(ClaimTypes.Role, "user")
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
 
             _basketController.ControllerContext = new ControllerContext
@@ -129,11 +128,10 @@ namespace healthri_basket_api.test.Controller.Tests
                 Id = basketId
             };
 
-            // Mock authenticated user with "sub" claim
+            // Mock authenticated user 
             ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
             [
-                new Claim("sub", userId.ToString()),
-                new Claim(ClaimTypes.Role, "user")
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
 
             _basketController.ControllerContext = new ControllerContext

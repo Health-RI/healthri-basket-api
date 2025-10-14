@@ -16,8 +16,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpGet("users")]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
-        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)) ;
-        else
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
             return Unauthorized("User ID in token invalid or not found.");
 
 
@@ -37,8 +36,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     {
         try
         {
-            if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId));
-            else
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
                 return Unauthorized("User ID in token invalid or not found.");
 
             Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, ct);

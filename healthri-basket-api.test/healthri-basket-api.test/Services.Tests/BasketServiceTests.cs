@@ -12,7 +12,7 @@ namespace healthri_basket_api.test.Services.Tests
         private readonly Mock<IItemService> _itemServiceMock;
         private readonly Mock<ITransactionLogger> _loggerMock;
         private readonly BasketService _basketService;
-        private CancellationToken _ct;
+        private readonly CancellationToken _ct;
 
         public BasketServiceTests()
         {

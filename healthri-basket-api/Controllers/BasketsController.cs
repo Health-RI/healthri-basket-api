@@ -16,12 +16,9 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpGet("users")]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
-        string userIdFromToken = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdFromToken))
-        {
-            return Unauthorized("User ID not found in token.");
-        }
-        Guid userId = new Guid(userIdFromToken);
+        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)) ;
+        else
+            return Unauthorized("User ID in token invalid or not found.");
 
 
         IEnumerable<Basket> baskets = await service.GetByUserIdAsync(userId, ct);
@@ -35,17 +32,14 @@ public class BasketsController(IBasketService service) : ControllerBase
         return basket != null ? Ok(basket) : NotFound();
     }
 
-    [HttpPost("{userId:guid}")]
+    [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateBasketDTO createBasketDTO, CancellationToken ct)
     {
         try
         {
-            string userIdFromToken = User.FindFirst("sub")?.Value;
-            if (string.IsNullOrEmpty(userIdFromToken))
-            {
-                return Unauthorized("User ID not found in token.");
-            }
-            Guid userId = new Guid(userIdFromToken);
+            if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId));
+            else
+                return Unauthorized("User ID in token invalid or not found.");
 
             Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, ct);
             return CreatedAtAction(

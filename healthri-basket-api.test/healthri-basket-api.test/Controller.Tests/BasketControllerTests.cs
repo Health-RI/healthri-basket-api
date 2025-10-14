@@ -14,8 +14,7 @@ namespace healthri_basket_api.test.Controller.Tests
     {
         private readonly Mock<IBasketService> _basketServiceMock;
         private readonly BasketsController _basketController;
-        private CancellationToken _ct;
-
+        private readonly CancellationToken _ct;
 
         public BasketsControllerTests()
         {

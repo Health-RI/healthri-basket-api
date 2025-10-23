@@ -2,6 +2,6 @@
 
 public class CreateBasketDTO
 {
-    required public string Name { get; set; }
-    required public bool IsDefault { get; set; }
+    public required string Name { get; init; }
+    public required bool IsDefault { get; init; }
 }

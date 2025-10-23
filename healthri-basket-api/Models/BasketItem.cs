@@ -6,7 +6,7 @@ namespace healthri_basket_api.Models;
 public class BasketItem
 {
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
     public Guid BasketId { get; set; }
     public Basket Basket { get; set; }
     public Guid ItemId { get; set; }

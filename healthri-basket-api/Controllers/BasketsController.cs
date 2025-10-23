@@ -44,7 +44,8 @@ public class BasketsController(IBasketService service) : ControllerBase
                 nameof(Get),
                 new { basketId = basket.Id },
                 basket);
-        } catch (Exception ex)
+        } 
+        catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }

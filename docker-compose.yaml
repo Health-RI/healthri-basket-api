@@ -27,6 +27,8 @@
   db:
     image: postgres
     container_name: postgres
+    # Exposing the Postgres port to the host is intended ONLY for local development.
+    # Remove or restrict this in production environments to avoid security risks.
     ports:
       - "5432:5432"
     restart: always

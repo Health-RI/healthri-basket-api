@@ -1,13 +1,11 @@
-name: RUN TESTS
+name: Run tests for .NET
 
-on: push
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        configuration: [Release]
-
     runs-on: ubuntu-latest
 
     steps:
@@ -21,35 +19,36 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
 
-      - name: Build
-        run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
-
-      - name: Test
-        run: dotnet test --configuration ${{ matrix.configuration }} --no-build --collect "XPlat Code Coverage" --logger "trx"
-
-      - name: SonarCloud Begin
-        uses: sonarsource/sonarqube-scan-action@v6           # note: use “sonarqube-scan-action” (replace older “sonarcloud-github-action”) :contentReference[oaicite:4]{index=4}
-        with:
-          args: >
-            -Dsonar.organization=health-ri
-            -Dsonar.projectKey=healthri-basket-api
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml"
-            -Dsonar.cs.vstest.reportsPaths="**/TestResults/*.trx"
+      - name: Sonar Begin
+        run: |
+          dotnet-sonarscanner begin \
+            /o:"health-ri" \
+            /k:"healthri-basket-api" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build for SonarCloud
-        run: dotnet build --configuration Release
+      - name: Restore
+        run: dotnet restore
 
-      - name: Test for SonarCloud
-        run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --logger "trx"
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
 
-      - name: SonarCloud End
-        uses: sonarsource/sonarqube-scan-action@v6
+      - name: Test (with OpenCover)
+        run: |
+          dotnet test --configuration Release --no-build \
+            /p:CollectCoverage=true \
+            /p:CoverletOutput=TestResults/coverage/ \
+            /p:CoverletOutputFormat=opencover \
+            --logger "trx"
+        # This produces **/coverage.opencover.xml used by Sonar
+
+      - name: Sonar End
+        run: dotnet-sonarscanner end
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

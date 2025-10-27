@@ -1,13 +1,11 @@
-name: RUN TESTS
+name: Run tests for .NET
 
-on: push
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        configuration: [Debug, Release]
-
     runs-on: ubuntu-latest
 
     steps:
@@ -21,37 +19,36 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore dependencies
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Sonar Begin
+        run: |
+          dotnet-sonarscanner begin \
+            /o:"health-ri" \
+            /k:"Health-RI_healthri-basket-api" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration ${{ matrix.configuration }} --no-restore
+        run: dotnet build --configuration Release --no-restore
 
-      - name: Test
-        run: dotnet test --configuration ${{ matrix.configuration }} --no-build --collect "XPlat Code Coverage" --logger "trx"
-
-      - name: Install reportgenerator tool
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      - name: Generate coverage report
+      - name: Test (with OpenCover)
         run: |
-          export PATH="$PATH:$HOME/.dotnet/tools"
-          REPORTS=$(find . -type f -name 'coverage.cobertura.xml' -print | tr '\n' ';')
-          reportgenerator -reports:"$REPORTS" -targetdir:"CoverageReport" -reporttypes:"HtmlInline;Cobertura"
+          dotnet test --configuration Release --no-build \
+            /p:CollectCoverage=true \
+            /p:CoverletOutput=TestResults/coverage/ \
+            /p:CoverletOutputFormat=opencover \
+            --logger "trx"
+        # This produces **/coverage.opencover.xml used by Sonar
 
-      - name: Upload Coverage Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: CoverageReport-${{ matrix.configuration }}
-          path: CoverageReport/**
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: TestResults-${{ matrix.configuration }}
-          path: '**/TestResults/*.trx'
-
-      - name: Add coverage link to summary
-        run: |
-          echo "### Coverage Report (${{ matrix.configuration }})" >> $GITHUB_STEP_SUMMARY
-          echo "- Download artifact **CoverageReport-${{ matrix.configuration }}** to view HTML report." >> $GITHUB_STEP_SUMMARY
+      - name: Sonar End
+        run: dotnet-sonarscanner end
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

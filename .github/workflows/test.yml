@@ -30,28 +30,26 @@ jobs:
       - name: Test
         run: dotnet test --configuration ${{ matrix.configuration }} --no-build --collect "XPlat Code Coverage" --logger "trx"
 
-      - name: Install reportgenerator tool
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      - name: Generate coverage report
-        run: |
-          export PATH="$PATH:$HOME/.dotnet/tools"
-          REPORTS=$(find . -type f -name 'coverage.cobertura.xml' -print | tr '\n' ';')
-          reportgenerator -reports:"$REPORTS" -targetdir:"CoverageReport" -reporttypes:"HtmlInline;Cobertura"
-
-      - name: Upload Coverage Report
-        uses: actions/upload-artifact@v4
+      - name: SonarCloud Begin
+        uses: sonarsource/sonarqube-scan-action@v6           # note: use “sonarqube-scan-action” (replace older “sonarcloud-github-action”) :contentReference[oaicite:4]{index=4}
         with:
-          name: CoverageReport-${{ matrix.configuration }}
-          path: CoverageReport/**
+          args: >
+            -Dsonar.organization=health-ri
+            -Dsonar.projectKey=healthri-basket-api
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml"
+            -Dsonar.cs.vstest.reportsPaths="**/TestResults/*.trx"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: TestResults-${{ matrix.configuration }}
-          path: '**/TestResults/*.trx'
+      - name: Build for SonarCloud
+        run: dotnet build --configuration Release
 
-      - name: Add coverage link to summary
-        run: |
-          echo "### Coverage Report (${{ matrix.configuration }})" >> $GITHUB_STEP_SUMMARY
-          echo "- Download artifact **CoverageReport-${{ matrix.configuration }}** to view HTML report." >> $GITHUB_STEP_SUMMARY
+      - name: Test for SonarCloud
+        run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --logger "trx"
+
+      - name: SonarCloud End
+        uses: sonarsource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -86,7 +86,7 @@ namespace healthri_basket_api.test.Services.Tests
             _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            bool success = await _basketService.RenameAsync(basket.Id, newName, _ct);
+            bool success = await _basketService.RenameAsync(basket.UserId, basket.Id, newName, _ct);
 
             // Assert
             Assert.True(success);
@@ -106,7 +106,7 @@ namespace healthri_basket_api.test.Services.Tests
             _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act
-            bool success = await _basketService.DeleteAsync(basket.Id, _ct);
+            bool success = await _basketService.DeleteAsync(basket.UserId, basket.Id, _ct);
 
             // Assert
             Assert.True(success);
@@ -126,7 +126,7 @@ namespace healthri_basket_api.test.Services.Tests
             _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            bool success = await _basketService.RestoreAsync(basket.Id, _ct);
+            bool success = await _basketService.RestoreAsync(basket.UserId, basket.Id, _ct);
 
             // Assert
             Assert.True(success);
@@ -145,7 +145,7 @@ namespace healthri_basket_api.test.Services.Tests
             _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            bool success = await _basketService.ArchiveAsync(basket.Id, _ct);
+            bool success = await _basketService.ArchiveAsync(basket.UserId, basket.Id, _ct);
 
             // Assert
             Assert.True(success);
@@ -164,7 +164,7 @@ namespace healthri_basket_api.test.Services.Tests
             _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            var success = await _basketService.ClearAsync(basket.Id, _ct);
+            var success = await _basketService.ClearAsync(basket.UserId, basket.Id, _ct);
 
             // Assert
             Assert.True(success);
@@ -205,7 +205,7 @@ namespace healthri_basket_api.test.Services.Tests
 
 
             // Act
-            Basket? result = await _basketService.AddItemAsync(basketId, item.Id, source, _ct);
+            Basket? result = await _basketService.AddItemAsync(basket.UserId, basketId, item.Id, source, _ct);
 
             // Assert
             Assert.NotNull(result);
@@ -231,7 +231,7 @@ namespace healthri_basket_api.test.Services.Tests
             _basketRepositoryMock.Setup(r => r.GetByIdAsync(basket.Id, _ct)).ReturnsAsync(basket);
 
             // Act 
-            var success = await _basketService.RemoveItemAsync(basket.Id, itemToRemoveId, source, _ct);
+            var success = await _basketService.RemoveItemAsync(basket.UserId, basket.Id, itemToRemoveId, source, _ct);
 
             // Assert
             Assert.True(success);

@@ -22,9 +22,13 @@ public class BasketService : IBasketService
         return await _basketRepository.GetByUserIdAsync(userId, ct);
     }
 
-    public async Task<Basket?> GetByIdAsync(Guid basketId, CancellationToken ct)
+    public async Task<Basket?> GetByIdAsync(Guid userId, Guid basketId, CancellationToken ct)
     {
-        return await _basketRepository.GetByIdAsync(basketId, ct);
+        var basket = await _basketRepository.GetByIdAsync(basketId, ct);
+        if (basket == null || basket.UserId != userId)
+            return null;
+        
+        return basket;
     }
 
     public async Task<Basket> CreateAsync(Guid userId, string name, bool isDefault, CancellationToken ct)
@@ -36,10 +40,10 @@ public class BasketService : IBasketService
         return basket;
     }
 
-    public async Task<bool> RenameAsync(Guid basketId, string newName, CancellationToken ct)
+    public async Task<bool> RenameAsync(Guid userId, Guid basketId, string newName, CancellationToken ct)
     {
         Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         basket.Rename(newName);
         await _basketRepository.UpdateAsync(basket, ct);
@@ -48,10 +52,10 @@ public class BasketService : IBasketService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(Guid basketId, CancellationToken ct)
+    public async Task<bool> DeleteAsync(Guid userId, Guid basketId, CancellationToken ct)
     {
         Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
-        if (basket == null || basket.IsDefault) return false;
+        if (basket == null || basket.UserId != userId || basket.IsDefault) return false;
 
         basket.Delete();
         await _basketRepository.UpdateAsync(basket, ct);
@@ -60,10 +64,10 @@ public class BasketService : IBasketService
         return true;
     }
 
-    public async Task<bool> RestoreAsync(Guid basketId, CancellationToken ct)
+    public async Task<bool> RestoreAsync(Guid userId, Guid basketId, CancellationToken ct)
     {
         Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         basket.Restore();
         await _basketRepository.UpdateAsync(basket, ct);
@@ -72,10 +76,10 @@ public class BasketService : IBasketService
         return true;
     }
 
-    public async Task<bool> ArchiveAsync(Guid basketId, CancellationToken ct)
+    public async Task<bool> ArchiveAsync(Guid userId, Guid basketId, CancellationToken ct)
     {
         Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         basket.Archive();
         await _basketRepository.UpdateAsync(basket, ct);
@@ -84,10 +88,10 @@ public class BasketService : IBasketService
         return true;
     }
 
-    public async Task<bool> ClearAsync(Guid basketId, CancellationToken ct)
+    public async Task<bool> ClearAsync(Guid userId, Guid basketId, CancellationToken ct)
     {
         Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         basket.ClearItems();
         await _basketRepository.UpdateAsync(basket, ct);
@@ -96,12 +100,15 @@ public class BasketService : IBasketService
         return true;
     }
 
-    public async Task<Basket?> AddItemAsync(Guid basketId, Guid itemId, BasketItemSource source, CancellationToken ct)
+    public async Task<Basket?> AddItemAsync(Guid userId, Guid basketId, Guid itemId, BasketItemSource source, CancellationToken ct)
     {
         try
         {
             Basket basket = await _basketRepository.GetByIdAsync(basketId, ct)
                          ?? throw new InvalidOperationException("Basket not found");
+
+            if (basket.UserId != userId)
+                throw new UnauthorizedAccessException("Not authorized to modify this basket");
 
             if (basket.HasItem(itemId))
                 throw new InvalidOperationException("Item already in basket");
@@ -128,10 +135,10 @@ public class BasketService : IBasketService
     }
 
 
-    public async Task<bool> RemoveItemAsync(Guid basketId, Guid itemId, BasketItemSource source, CancellationToken ct)
+    public async Task<bool> RemoveItemAsync(Guid userId, Guid basketId, Guid itemId, BasketItemSource source, CancellationToken ct)
     {
         Basket basket = await _basketRepository.GetByIdAsync(basketId, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         // Update in-memory basket model
         basket.RemoveItem(itemId);

@@ -108,7 +108,7 @@ public class BasketService : IBasketService
                          ?? throw new InvalidOperationException("Basket not found");
 
             if (basket.UserId != userId)
-                throw new UnauthorizedAccessException("Not authorized to modify this basket");
+                return null;
 
             if (basket.HasItem(itemId))
                 throw new InvalidOperationException("Item already in basket");

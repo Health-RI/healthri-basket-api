@@ -27,6 +27,22 @@ namespace healthri_basket_api.test.Controller.Tests
             _basketController = new BasketsController(_basketServiceMock.Object);
         }
 
+        private void SetAuthenticatedUser(Guid userId)
+        {
+            var user = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                    },
+                    "mock"));
+
+            _basketController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+        }
+
         private Basket CreateBasketWithItems(Guid? basketId)
         {
             Guid userId = Guid.NewGuid();
@@ -59,16 +75,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.GetByUserIdAsync(userId, _ct)).ReturnsAsync(userBaskets);
 
-            // Mock authenticated user 
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.GetUserBaskets(_ct);
@@ -87,16 +94,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.GetByIdAsync(expectedBasket.UserId, expectedBasket.Id, _ct)).ReturnsAsync(expectedBasket);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, expectedBasket.UserId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
             IActionResult result = await _basketController.Get(expectedBasket.Id, _ct);
@@ -116,16 +114,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.GetByIdAsync(userId, basketId, _ct)).ReturnsAsync(expectedBasket);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Get(basketId, _ct);
@@ -151,16 +140,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 Id = basketId
             };
 
-            // Mock authenticated user 
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             _basketServiceMock
                 .Setup(s => s.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, _ct))
@@ -217,16 +197,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.RenameAsync(userId, basketId, newName, _ct)).ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Rename(basketId, newName, _ct);
@@ -246,16 +217,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.ArchiveAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Archive(basketId, _ct);
@@ -275,16 +237,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.RestoreAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Restore(basketId, _ct);
@@ -333,16 +286,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.DeleteAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Delete(basketId, _ct);
@@ -362,16 +306,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.ClearAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Clear(basketId, _ct);
@@ -391,16 +326,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.ClearAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Clear(basketId, _ct);
@@ -423,16 +349,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 .Setup(s => s.AddItemAsync(expectedBasket.UserId, expectedBasket.Id, item.Id, BasketItemSource.CatalogPage, _ct))
                 .ReturnsAsync(expectedBasket);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, expectedBasket.UserId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
             IActionResult result = await _basketController.AddItem(expectedBasket.Id, item.Id, _ct);
@@ -460,16 +377,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.AddItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, _ct));
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.AddItem(basketId, itemId, _ct);
@@ -493,16 +401,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 .Setup(s => s.RemoveItemAsync(expectedBasket.UserId, basketId, itemToRemove.Id, BasketItemSource.CatalogPage, _ct)) 
                 .ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, expectedBasket.UserId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
             IActionResult result = await _basketController.RemoveItem(basketId, itemToRemove.Id, _ct);
@@ -525,16 +424,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.RemoveItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, _ct)).ReturnsAsync(expectedResponse);
             
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.RemoveItem(basketId, itemId, _ct);

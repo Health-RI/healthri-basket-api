@@ -34,6 +34,18 @@ public class BasketService : IBasketService
             ? SlugHelper.Slugify(name)
             : SlugHelper.Slugify(customSlug);
         
+        // If slug is empty after slugification, fall back to the name
+        if (string.IsNullOrEmpty(slug))
+        {
+            slug = SlugHelper.Slugify(name);
+        }
+        
+        // If still empty, reject the request
+        if (string.IsNullOrEmpty(slug))
+        {
+            throw new ArgumentException("Basket name must contain at least one valid character for slug generation.", nameof(name));
+        }
+        
         // Ensure slug uniqueness for this user
         int counter = 1;
         string originalSlug = slug;
@@ -55,7 +67,19 @@ public class BasketService : IBasketService
         Basket? basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
         if (basket == null) return false;
 
+        // Validate newName and ensure it generates a valid slug
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            return false;
+        }
+
         string newSlug = SlugHelper.Slugify(newName);
+        
+        // If slug generation fails, keep the existing name and slug
+        if (string.IsNullOrEmpty(newSlug))
+        {
+            return false;
+        }
         
         // Ensure new slug uniqueness (skip if it's the same basket)
         int counter = 1;

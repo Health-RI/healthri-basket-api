@@ -13,12 +13,23 @@ namespace healthri_basket_api.Controllers;
 [Route("api/v1/baskets")]
 public class BasketsController(IBasketService service) : ControllerBase
 {
+    private bool TryGetUserId(out Guid userId, out IActionResult? errorResult)
+    {
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId))
+        {
+            errorResult = Unauthorized("User ID in token invalid or not found.");
+            return false;
+        }
+
+        errorResult = null;
+        return true;
+    }
+
     [HttpGet("users")]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
 
         IEnumerable<Basket> baskets = await service.GetByUserIdAsync(userId, ct);
         return Ok(baskets);
@@ -27,7 +38,10 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpGet("{basketId:guid}")]
     public async Task<IActionResult> Get(Guid basketId, CancellationToken ct)
     {
-        var basket = await service.GetByIdAsync(basketId, ct);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        var basket = await service.GetByIdAsync(userId, basketId, ct);
         return basket != null ? Ok(basket) : NotFound();
     }
 
@@ -36,8 +50,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     {
         try
         {
-            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-                return Unauthorized("User ID in token invalid or not found.");
+            if (!TryGetUserId(out var userId, out var error))
+                return error!;
 
             Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, ct);
             return CreatedAtAction(
@@ -54,42 +68,60 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPut("{basketId:guid}/rename")]
     public async Task<IActionResult> Rename(Guid basketId, [FromBody] string name, CancellationToken ct)
     {
-        var result = await service.RenameAsync(basketId, name, ct);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        var result = await service.RenameAsync(userId, basketId, name, ct);
         return result ? Ok() : NotFound();
     }
 
     [HttpPost("{basketId:guid}/archive")]
     public async Task<IActionResult> Archive(Guid basketId, CancellationToken ct)
     {
-        var result = await service.ArchiveAsync(basketId, ct);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        var result = await service.ArchiveAsync(userId, basketId, ct);
         return result ? Ok() : NotFound();
     }
 
     [HttpPost("{basketId:guid}/restore")]
     public async Task<IActionResult> Restore(Guid basketId, CancellationToken ct)
     {
-        var result = await service.RestoreAsync(basketId, ct);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        var result = await service.RestoreAsync(userId, basketId, ct);
         return result ? Ok() : NotFound();
     }
 
     [HttpDelete("{basketId:guid}")]
     public async Task<IActionResult> Delete(Guid basketId, CancellationToken ct)
     {
-        var result = await service.DeleteAsync(basketId, ct);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        var result = await service.DeleteAsync(userId, basketId, ct);
         return result ? Ok() : NotFound();
     }
 
     [HttpPost("{basketId:guid}/items")]
     public async Task<IActionResult> AddItem(Guid basketId, [FromBody] Guid itemId, CancellationToken ct)
     {
-        var result = await service.AddItemAsync(basketId, itemId, BasketItemSource.CatalogPage, ct);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        var result = await service.AddItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, ct);
         return result != null ? Ok(result) : NotFound();
     }
 
     [HttpDelete("{basketId:guid}/items")]
     public async Task<IActionResult> Clear(Guid basketId, CancellationToken ct)
     {
-        var result = await service.ClearAsync(basketId, ct);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        var result = await service.ClearAsync(userId, basketId, ct);
         return result ? Ok() : NotFound();
     }
 
@@ -97,7 +129,10 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpDelete("{basketId:guid}/items/{itemId}")]
     public async Task<IActionResult> RemoveItem(Guid basketId, Guid itemId, CancellationToken ct)
     {
-        var result = await service.RemoveItemAsync(basketId, itemId, BasketItemSource.CatalogPage, ct);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        var result = await service.RemoveItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, ct);
         return result ? Ok() : NotFound();
     }
 }

@@ -27,6 +27,22 @@ namespace healthri_basket_api.test.Controller.Tests
             _basketController = new BasketsController(_basketServiceMock.Object);
         }
 
+        private void SetAuthenticatedUser(Guid userId)
+        {
+            var user = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                    },
+                    "mock"));
+
+            _basketController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+        }
+
         private Basket CreateBasketWithItems(Guid? basketId)
         {
             Guid userId = Guid.NewGuid();
@@ -59,16 +75,7 @@ namespace healthri_basket_api.test.Controller.Tests
 
             _basketServiceMock.Setup(s => s.GetByUserIdAsync(userId, _ct)).ReturnsAsync(userBaskets);
 
-            // Mock authenticated user 
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.GetUserBaskets(_ct);
@@ -85,7 +92,9 @@ namespace healthri_basket_api.test.Controller.Tests
             Guid basketId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
 
-            _basketServiceMock.Setup(s => s.GetByIdAsync(expectedBasket.Id, _ct)).ReturnsAsync(expectedBasket);
+            _basketServiceMock.Setup(s => s.GetByIdAsync(expectedBasket.UserId, expectedBasket.Id, _ct)).ReturnsAsync(expectedBasket);
+
+            SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
             IActionResult result = await _basketController.Get(expectedBasket.Id, _ct);
@@ -100,9 +109,12 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Basket? expectedBasket = null;
 
-            _basketServiceMock.Setup(s => s.GetByIdAsync(basketId, _ct)).ReturnsAsync(expectedBasket);
+            _basketServiceMock.Setup(s => s.GetByIdAsync(userId, basketId, _ct)).ReturnsAsync(expectedBasket);
+
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Get(basketId, _ct);
@@ -128,16 +140,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 Id = basketId
             };
 
-            // Mock authenticated user 
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             _basketServiceMock
                 .Setup(s => s.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, _ct))
@@ -158,11 +161,23 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
             string newName = "New basket name";
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.RenameAsync(basketId, newName, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.RenameAsync(userId, basketId, newName, _ct)).ReturnsAsync(expectedResponse);
+
+            // Mock authenticated user
+            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            ], "mock"));
+
+            _basketController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
 
             // Act
             IActionResult result = await _basketController.Rename(basketId, newName, _ct);
@@ -176,10 +191,13 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             string newName = "New basket name";
             bool expectedResponse = false;
 
-            _basketServiceMock.Setup(s => s.RenameAsync(basketId, newName, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.RenameAsync(userId, basketId, newName, _ct)).ReturnsAsync(expectedResponse);
+
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Rename(basketId, newName, _ct);
@@ -193,10 +211,13 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.ArchiveAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.ArchiveAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Archive(basketId, _ct);
@@ -210,10 +231,13 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.RestoreAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.RestoreAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Restore(basketId, _ct);
@@ -227,10 +251,22 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.DeleteAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.DeleteAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+
+            // Mock authenticated user
+            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            ], "mock"));
+
+            _basketController.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
 
             // Act
             IActionResult result = await _basketController.Delete(basketId, _ct);
@@ -244,10 +280,13 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = false;
 
-            _basketServiceMock.Setup(s => s.DeleteAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.DeleteAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Delete(basketId, _ct);
@@ -261,10 +300,13 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.ClearAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.ClearAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Clear(basketId, _ct);
@@ -278,10 +320,13 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
             bool expectedResponse = false;
 
-            _basketServiceMock.Setup(s => s.ClearAsync(basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.ClearAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.Clear(basketId, _ct);
@@ -301,8 +346,10 @@ namespace healthri_basket_api.test.Controller.Tests
             expectedBasket.AddItem(item);
 
             _basketServiceMock
-                .Setup(s => s.AddItemAsync(expectedBasket.Id, item.Id, BasketItemSource.CatalogPage, _ct))
+                .Setup(s => s.AddItemAsync(expectedBasket.UserId, expectedBasket.Id, item.Id, BasketItemSource.CatalogPage, _ct))
                 .ReturnsAsync(expectedBasket);
+
+            SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
             IActionResult result = await _basketController.AddItem(expectedBasket.Id, item.Id, _ct);
@@ -325,9 +372,12 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Guid itemId = Guid.NewGuid();
 
-            _basketServiceMock.Setup(s => s.AddItemAsync(basketId, itemId, BasketItemSource.CatalogPage, _ct));
+            _basketServiceMock.Setup(s => s.AddItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, _ct));
+
+            SetAuthenticatedUser(userId);
 
             // Act
             IActionResult result = await _basketController.AddItem(basketId, itemId, _ct);
@@ -348,8 +398,10 @@ namespace healthri_basket_api.test.Controller.Tests
 
 
             _basketServiceMock
-                .Setup(s => s.RemoveItemAsync(basketId, itemToRemove.Id, BasketItemSource.CatalogPage, _ct)) 
+                .Setup(s => s.RemoveItemAsync(expectedBasket.UserId, basketId, itemToRemove.Id, BasketItemSource.CatalogPage, _ct)) 
                 .ReturnsAsync(expectedResponse);
+
+            SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
             IActionResult result = await _basketController.RemoveItem(basketId, itemToRemove.Id, _ct);
@@ -366,11 +418,14 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
+            Guid userId = Guid.NewGuid();
             Guid itemId = Guid.NewGuid();
             bool expectedResponse = false;
 
-            _basketServiceMock.Setup(s => s.RemoveItemAsync(basketId, itemId, BasketItemSource.UserPage, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.RemoveItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, _ct)).ReturnsAsync(expectedResponse);
             
+            SetAuthenticatedUser(userId);
+
             // Act
             IActionResult result = await _basketController.RemoveItem(basketId, itemId, _ct);
 

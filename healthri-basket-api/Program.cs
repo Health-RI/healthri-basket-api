@@ -21,6 +21,12 @@ builder.Services.AddScoped<ITransactionLogger, TransactionLoggerRepository>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IBasketService, BasketService>();
 
+#if DEBUG
+builder.Services.AddScoped<IUserIdProvider, DebugUserIdProvider>();
+#else
+builder.Services.AddScoped<IUserIdProvider, ClaimsUserIdProvider>();
+#endif
+
 // Initialize config from environment variables
 DotEnv.Load();
 var dbConfig = DatabaseConfig.LoadFromEnv();

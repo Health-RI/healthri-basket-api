@@ -13,6 +13,7 @@ namespace healthri_basket_api.test.Controller.Tests
     public class BasketsControllerTests
     {
         private readonly Mock<IBasketService> _basketServiceMock;
+        private readonly Mock<IUserIdProvider> _userIdProviderMock;
         private readonly BasketsController _basketController;
         private readonly CancellationToken _ct;
 
@@ -22,9 +23,10 @@ namespace healthri_basket_api.test.Controller.Tests
 
             // Initialize mocks once for all tests
             _basketServiceMock = new Mock<IBasketService>();
+            _userIdProviderMock = new Mock<IUserIdProvider>();
 
             // Instantiate the controller using the mocks
-            _basketController = new BasketsController(_basketServiceMock.Object);
+            _basketController = new BasketsController(_basketServiceMock.Object, _userIdProviderMock.Object);
         }
 
         private Basket CreateBasketWithItems(Guid? basketId)
@@ -65,6 +67,8 @@ namespace healthri_basket_api.test.Controller.Tests
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
 
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
+
             _basketController.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
@@ -92,6 +96,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, expectedBasket.UserId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(expectedBasket.UserId);
 
             _basketController.ControllerContext = new ControllerContext
             {
@@ -121,6 +127,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
 
             _basketController.ControllerContext = new ControllerContext
             {
@@ -156,6 +164,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
 
             _basketController.ControllerContext = new ControllerContext
             {
@@ -194,6 +204,8 @@ namespace healthri_basket_api.test.Controller.Tests
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
 
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
+
             _basketController.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
@@ -222,6 +234,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
 
             _basketController.ControllerContext = new ControllerContext
             {
@@ -252,6 +266,8 @@ namespace healthri_basket_api.test.Controller.Tests
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
 
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
+
             _basketController.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
@@ -280,6 +296,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
 
             _basketController.ControllerContext = new ControllerContext
             {
@@ -310,6 +328,8 @@ namespace healthri_basket_api.test.Controller.Tests
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
 
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
+
             _basketController.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
@@ -338,6 +358,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
 
             _basketController.ControllerContext = new ControllerContext
             {
@@ -368,6 +390,8 @@ namespace healthri_basket_api.test.Controller.Tests
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
 
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
+
             _basketController.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
@@ -396,6 +420,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
 
             _basketController.ControllerContext = new ControllerContext
             {
@@ -428,6 +454,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, expectedBasket.UserId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(expectedBasket.UserId);
 
             _basketController.ControllerContext = new ControllerContext
             {
@@ -466,6 +494,8 @@ namespace healthri_basket_api.test.Controller.Tests
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
 
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
+
             _basketController.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
@@ -499,6 +529,8 @@ namespace healthri_basket_api.test.Controller.Tests
                 new Claim(ClaimTypes.NameIdentifier, expectedBasket.UserId.ToString()),
             ], "mock"));
 
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(expectedBasket.UserId);
+
             _basketController.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
@@ -530,6 +562,8 @@ namespace healthri_basket_api.test.Controller.Tests
             [
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             ], "mock"));
+
+            _userIdProviderMock.Setup(p => p.GetUserId(It.IsAny<ClaimsPrincipal>())).Returns(userId);
 
             _basketController.ControllerContext = new ControllerContext
             {

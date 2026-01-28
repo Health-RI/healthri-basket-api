@@ -4,22 +4,18 @@ using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace healthri_basket_api.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/v1/baskets")]
-public class BasketsController(IBasketService service) : ControllerBase
+public class BasketsController(IBasketService service, IUserIdProvider userIdProvider) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
-
+        var userId = userIdProvider.GetUserId(User);
         IEnumerable<Basket> baskets = await service.GetByUserIdAsync(userId, ct);
         return Ok(baskets);
     }
@@ -27,9 +23,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpGet("{slug}")]
     public async Task<IActionResult> Get(string slug, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        var userId = userIdProvider.GetUserId(User);
         var basket = await service.GetBySlugAsync(userId, slug, ct);
         return basket != null ? Ok(basket) : NotFound();
     }
@@ -39,15 +33,13 @@ public class BasketsController(IBasketService service) : ControllerBase
     {
         try
         {
-            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-                return Unauthorized("User ID in token invalid or not found.");
-
+            var userId = userIdProvider.GetUserId(User);
             Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, createBasketDTO.Slug, ct);
             return CreatedAtAction(
                 nameof(Get),
                 new { slug = basket.Slug },
                 basket);
-        } 
+        }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
@@ -57,9 +49,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPut("{slug}/rename")]
     public async Task<IActionResult> Rename(string slug, [FromBody] string name, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        var userId = userIdProvider.GetUserId(User);
         var result = await service.RenameAsync(userId, slug, name, ct);
         return result ? Ok() : NotFound();
     }
@@ -67,9 +57,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPost("{slug}/archive")]
     public async Task<IActionResult> Archive(string slug, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        var userId = userIdProvider.GetUserId(User);
         var result = await service.ArchiveAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
@@ -77,9 +65,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPost("{slug}/restore")]
     public async Task<IActionResult> Restore(string slug, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        var userId = userIdProvider.GetUserId(User);
         var result = await service.RestoreAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
@@ -87,9 +73,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpDelete("{slug}")]
     public async Task<IActionResult> Delete(string slug, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        var userId = userIdProvider.GetUserId(User);
         var result = await service.DeleteAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
@@ -97,9 +81,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPost("{slug}/items")]
     public async Task<IActionResult> AddItem(string slug, [FromBody] Guid itemId, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        var userId = userIdProvider.GetUserId(User);
         var result = await service.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, ct);
         return result != null ? Ok(result) : NotFound();
     }
@@ -107,9 +89,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpDelete("{slug}/items")]
     public async Task<IActionResult> Clear(string slug, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        var userId = userIdProvider.GetUserId(User);
         var result = await service.ClearAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
@@ -118,9 +98,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpDelete("{slug}/items/{itemId}")]
     public async Task<IActionResult> RemoveItem(string slug, Guid itemId, CancellationToken ct)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized("User ID in token invalid or not found.");
-
+        var userId = userIdProvider.GetUserId(User);
         var result = await service.RemoveItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, ct);
         return result ? Ok() : NotFound();
     }

@@ -6,6 +6,7 @@ public interface IBasketRepository
 {
     Task<List<Basket>> GetByUserIdAsync(Guid userUuid, CancellationToken ct);
     Task<Basket> GetByIdAsync(Guid id, CancellationToken ct);
+    Task<Basket?> GetBySlugAsync(Guid userId, string slug, CancellationToken ct);
     Task<bool> AddItemAsync(BasketItem basketItem, CancellationToken ct);
     Task<bool> RemoveItemAsync(BasketItem basketItem, CancellationToken ct);
     Task<Basket> CreateAsync(Basket basket, CancellationToken ct);

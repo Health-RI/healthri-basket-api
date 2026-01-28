@@ -64,4 +64,12 @@ public class BasketRepository : IBasketRepository
             .FirstOrDefaultAsync(b => b.Id.Equals(basketId), ct);
     }
 
+    public async Task<Basket?> GetBySlugAsync(Guid userId, string slug, CancellationToken ct)
+    {
+        return await _context.Baskets
+            .Include(b => b.Items)
+                .ThenInclude(bi => bi.Item)
+            .FirstOrDefaultAsync(b => b.UserId == userId && b.Slug == slug, ct);
+    }
+
 }

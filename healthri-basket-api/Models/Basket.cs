@@ -8,6 +8,7 @@ public class Basket
     [Key]
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public string Slug { get; set; }
     public string Name { get; set; }
     public bool IsDefault { get; set; }
     public BasketStatus Status { get; set; }
@@ -17,9 +18,10 @@ public class Basket
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     
-    public Basket(Guid userId, string name, bool isDefault) { 
+    public Basket(Guid userId, string slug, string name, bool isDefault) { 
         Id = Guid.NewGuid();
         UserId = userId;
+        Slug = slug;
         Name = name;
         IsDefault = isDefault;
         Status = BasketStatus.Active;
@@ -79,9 +81,10 @@ public class Basket
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void Rename(string newName)
+    public void Rename(string newName, string newSlug)
     {
         Name = newName;
+        Slug = newSlug;
         UpdatedAt = DateTime.UtcNow;
     }
 }

@@ -23,7 +23,7 @@ public class OpenIdConfiguration
             string.IsNullOrEmpty(clientId) ||
             string.IsNullOrEmpty(clientSecret))
         {
-            throw new Exception("One or more required OpenID environment variables are missing.");
+            throw new InvalidOperationException("One or more required OpenID environment variables are missing.");
         }
 
         return new OpenIdConfiguration

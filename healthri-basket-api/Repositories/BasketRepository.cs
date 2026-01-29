@@ -28,16 +28,16 @@ public class BasketRepository(AppDbContext context) : IBasketRepository
         return true;
     }
 
-    public async Task<bool> AddItemAsync(BasketItem item, CancellationToken ct)
+    public async Task<bool> AddItemAsync(BasketItem basketItem, CancellationToken ct)
     {
-        await context.BasketItems.AddAsync(item, ct);
+        await context.BasketItems.AddAsync(basketItem, ct);
         await context.SaveChangesAsync(ct);
         return true;
     }
 
-    public async Task<bool> RemoveItemAsync(BasketItem item, CancellationToken ct)
+    public async Task<bool> RemoveItemAsync(BasketItem basketItem, CancellationToken ct)
     {
-        context.BasketItems.Remove(item);
+        context.BasketItems.Remove(basketItem);
         await context.SaveChangesAsync(ct);
         return true;
     }
@@ -51,11 +51,11 @@ public class BasketRepository(AppDbContext context) : IBasketRepository
             .ToListAsync(ct);
     }
 
-    public async Task<Basket?> GetByIdAsync(Guid basketId, CancellationToken ct)
+    public async Task<Basket?> GetByIdAsync(Guid id, CancellationToken ct)
     {
         return await context.Baskets
             .Include(b => b.Items)
-            .FirstOrDefaultAsync(b => b.Id.Equals(basketId), ct);
+            .FirstOrDefaultAsync(b => b.Id.Equals(id), ct);
     }
 
 }

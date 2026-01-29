@@ -1,0 +1,4 @@
+root = true
+
+[**/Migrations/*.cs]
+dotnet_diagnostic.S1192.severity = none

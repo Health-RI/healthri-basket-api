@@ -7,11 +7,10 @@ namespace healthri_basket_api.Repositories;
 
 public class TransactionLoggerRepository(AppDbContext context) : ITransactionLogger
 {
-    public Task LogAsync(Guid userUuid, Guid basketId, Guid itemId, BasketAction action, BasketItemSource source)
+    public Task LogAsync(Guid userId, Guid basketId, Guid itemId, BasketAction action, BasketItemSource source)
     {
-        context.Add(new TransactionLogEntry(userUuid, basketId, itemId, action, source));
+        context.Add(new TransactionLogEntry(userId, basketId, itemId, action, source));
         context.SaveChanges();
         return Task.CompletedTask;
     }
 }
-

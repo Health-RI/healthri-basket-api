@@ -8,7 +8,7 @@ public class Item
     public Guid Id { get; init; }
     public string Title { get; set; }
     public string Description { get; set; }
-    public List<BasketItem> Baskets { get; set; } = [];
+    public List<BasketItem> Baskets { get; set; }
 
     public Item(Guid Id, string title, string description)
     {

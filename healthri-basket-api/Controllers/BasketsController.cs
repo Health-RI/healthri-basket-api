@@ -15,11 +15,14 @@ public class BasketsController(IBasketService service) : ControllerBase
 {
     private bool TryGetUserId(out Guid userId, out IActionResult? errorResult)
     {
-        var rawUserId = User.FindFirstValue("sub");
+        var rawUserId =
+            User.FindFirstValue("sub") ??
+            User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (rawUserId == null || !Guid.TryParse(rawUserId, out userId))
         {
             errorResult = Unauthorized("User ID in token invalid or not found.");
+            userId = Guid.Empty;
             return false;
         }
 

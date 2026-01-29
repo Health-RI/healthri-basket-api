@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using healthri_basket_api.Controllers.DTOs;
 using healthri_basket_api.Interfaces;
@@ -16,7 +17,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     private bool TryGetUserId(out Guid userId, out IActionResult? errorResult)
     {
         var rawUserId =
-            User.FindFirstValue("sub") ??
+            User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
             User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (rawUserId == null || !Guid.TryParse(rawUserId, out userId))

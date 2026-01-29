@@ -33,7 +33,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 new ClaimsIdentity(
                     new[]
                     {
-                        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                        new Claim("sub", userId.ToString()),
                     },
                     "mock"));
 
@@ -171,7 +171,7 @@ namespace healthri_basket_api.test.Controller.Tests
             // Mock authenticated user
             ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
             [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim("sub", userId.ToString()),
             ], "mock"));
 
             _basketController.ControllerContext = new ControllerContext
@@ -260,7 +260,7 @@ namespace healthri_basket_api.test.Controller.Tests
             // Mock authenticated user
             ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
             [
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim("sub", userId.ToString()),
             ], "mock"));
 
             _basketController.ControllerContext = new ControllerContext

@@ -1,10 +1,10 @@
+using System.Security.Claims;
 using healthri_basket_api.Controllers.DTOs;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace healthri_basket_api.Controllers;
 
@@ -15,7 +15,9 @@ public class BasketsController(IBasketService service) : ControllerBase
 {
     private bool TryGetUserId(out Guid userId, out IActionResult? errorResult)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId))
+        var rawUserId = User.FindFirstValue("sub");
+
+        if (rawUserId == null || !Guid.TryParse(rawUserId, out userId))
         {
             errorResult = Unauthorized("User ID in token invalid or not found.");
             return false;

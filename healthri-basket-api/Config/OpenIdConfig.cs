@@ -2,11 +2,11 @@
 
 public class OpenIdConfiguration
 {
-    public string Authority { get; set; } = default!;
-    public string Issuer { get; set; } = default!;
-    public string Audience { get; set; } = default!;
-    public string ClientId { get; set; } = default!;
-    public string ClientSecret { get; set; } = default!;
+    public string Authority { get; set; } = null!;
+    public string Issuer { get; set; } = null!;
+    public string Audience { get; set; } = null!;
+    public string ClientId { get; set; } = null!;
+    public string ClientSecret { get; set; } = null!;
 
     public static OpenIdConfiguration LoadFromEnv()
     {

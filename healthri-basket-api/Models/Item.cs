@@ -8,13 +8,14 @@ public class Item
     public Guid Id { get; init; }
     public string Title { get; set; }
     public string Description { get; set; }
-    public List<BasketItem> Baskets { get; set; }
+    public List<BasketItem> Baskets { get; set; } = [];
 
     public Item(Guid Id, string title, string description)
     {
         this.Id = Id;
         this.Title = title;
         this.Description = description;
+        Baskets = [];
     }
 
     public Item(string title, string description)
@@ -25,4 +26,3 @@ public class Item
         Baskets = [];
     }
 }
-

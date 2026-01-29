@@ -1,6 +1,4 @@
-﻿using dotenv.net;
-
-namespace healthri_basket_api.Config;
+﻿namespace healthri_basket_api.Config;
 
 public class DatabaseConfig
 {

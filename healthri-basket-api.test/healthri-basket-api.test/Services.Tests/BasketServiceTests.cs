@@ -16,7 +16,7 @@ namespace healthri_basket_api.test.Services.Tests
 
         public BasketServiceTests()
         {
-            _ct = new CancellationToken();
+            _ct = CancellationToken.None;
 
             _basketRepositoryMock = new Mock<IBasketRepository>();
             _itemServiceMock = new Mock<IItemService>();

@@ -4,6 +4,7 @@ using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace healthri_basket_api.Controllers;
@@ -15,7 +16,7 @@ public class BasketsController(IBasketService service) : ControllerBase
 {
     private bool TryGetUserId(out Guid userId, out IActionResult? errorResult)
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId))
+        if (!Guid.TryParse(User.FindFirstValue(JwtRegisteredClaimNames.Sub), out userId))
         {
             errorResult = Unauthorized("User ID in token invalid or not found.");
             return false;

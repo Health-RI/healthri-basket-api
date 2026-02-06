@@ -2,11 +2,11 @@
 
 public class OpenIdConfiguration
 {
-    public string Authority { get; set; } = default!;
-    public string Issuer { get; set; } = default!;
-    public string Audience { get; set; } = default!;
-    public string ClientId { get; set; } = default!;
-    public string ClientSecret { get; set; } = default!;
+    public required string Authority { get; set; }
+    public required string Issuer { get; set; }
+    public required string Audience { get; set; }
+    public required string ClientId { get; set; }
+    public required string ClientSecret { get; set; }
 
     public static OpenIdConfiguration LoadFromEnv()
     {
@@ -23,7 +23,7 @@ public class OpenIdConfiguration
             string.IsNullOrEmpty(clientId) ||
             string.IsNullOrEmpty(clientSecret))
         {
-            throw new Exception("One or more required OpenID environment variables are missing.");
+            throw new ArgumentNullException("OpenID environment variables", "One or more required OpenID environment variables are missing.");
         }
 
         return new OpenIdConfiguration

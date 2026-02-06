@@ -1,5 +1,6 @@
 using healthri_basket_api.Models.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace healthri_basket_api.Models;
 
@@ -7,9 +8,9 @@ public class Basket
 {
     [Key]
     public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public string Name { get; set; }
-    public bool IsDefault { get; set; }
+    public required Guid UserId { get; set; }
+    public required string Name { get; set; }
+    public required bool IsDefault { get; set; }
     public BasketStatus Status { get; set; }
     public List<BasketItem> Items { get; set; }
     public DateTime? DeletedAt { get; set; }
@@ -17,6 +18,7 @@ public class Basket
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     
+    [SetsRequiredMembers]
     public Basket(Guid userId, string name, bool isDefault) { 
         Id = Guid.NewGuid();
         UserId = userId;

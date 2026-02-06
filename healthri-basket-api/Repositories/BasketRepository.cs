@@ -57,13 +57,6 @@ public class BasketRepository : IBasketRepository
             .ToListAsync(ct);
     }
 
-    public async Task<Basket?> GetByIdAsync(Guid basketId, CancellationToken ct)
-    {
-        return await _context.Baskets
-            .Include(b => b.Items)
-            .FirstOrDefaultAsync(b => b.Id.Equals(basketId), ct);
-    }
-
     public async Task<Basket?> GetBySlugAsync(Guid userId, string slug, CancellationToken ct)
     {
         return await _context.Baskets

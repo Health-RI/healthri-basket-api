@@ -77,6 +77,71 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
         [Fact]
+        public async Task CreateAsync_WithValidCustomSlug_UsesCustomSlug()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            string name = "Test Basket";
+            string customSlug = "my-custom-slug";
+            bool isDefault = false;
+
+            // Act
+            Basket createdBasket = await _basketService.CreateAsync(userId, name, isDefault, customSlug, _ct);
+
+            // Assert
+            Assert.NotNull(createdBasket);
+            Assert.Equal(customSlug, createdBasket.Slug);
+            Assert.Equal(name, createdBasket.Name);
+
+            _basketRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Basket>(), _ct), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WithInvalidCustomSlug_ThrowsArgumentException()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            string name = "Test Basket";
+            string invalidSlug = "My Invalid Slug";
+            bool isDefault = false;
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ArgumentException>(
+                () => _basketService.CreateAsync(userId, name, isDefault, invalidSlug, _ct));
+            
+            Assert.Contains("not valid", exception.Message);
+            Assert.Contains("lowercase", exception.Message);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WithDuplicateSlug_AppendsNumberSuffix()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            string name = "Test Basket";
+            bool isDefault = false;
+            
+            // Mock existing basket with slug "test-basket"
+            var existingBasket = new Basket(userId, "test-basket", "Existing", false);
+            
+            // First call returns existing basket, second call returns null (slug available)
+            _basketRepositoryMock
+                .SetupSequence(r => r.GetBySlugAsync(userId, It.IsAny<string>(), _ct))
+                .ReturnsAsync(existingBasket)  // "test-basket" exists
+                .ReturnsAsync((Basket?)null);   // "test-basket-1" is available
+
+            // Act
+            Basket createdBasket = await _basketService.CreateAsync(userId, name, isDefault, null, _ct);
+
+            // Assert
+            Assert.NotNull(createdBasket);
+            Assert.Equal("test-basket-1", createdBasket.Slug);
+            Assert.Equal(name, createdBasket.Name);
+
+            _basketRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Basket>(), _ct), Times.Once);
+        }
+
+        [Fact]
         public async Task RenameAsync_WhenBasketExists_ReturnsTrueAndUpdatesName()
         {
             // Arrange

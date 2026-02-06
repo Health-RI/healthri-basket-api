@@ -30,20 +30,27 @@ public class BasketService : IBasketService
 
     public async Task<Basket> CreateAsync(Guid userId, string name, bool isDefault, string? customSlug, CancellationToken ct)
     {
-        string slug = string.IsNullOrWhiteSpace(customSlug) 
-            ? SlugHelper.Slugify(name)
-            : SlugHelper.Slugify(customSlug);
+        string slug;
         
-        // If slug is empty after slugification, fall back to the name
-        if (string.IsNullOrEmpty(slug))
+        if (!string.IsNullOrWhiteSpace(customSlug))
         {
-            slug = SlugHelper.Slugify(name);
+            // Validate custom slug is properly formatted
+            string slugified = SlugHelper.Slugify(customSlug);
+            if (slugified != customSlug)
+            {
+                throw new ArgumentException($"Custom slug '{customSlug}' is not valid. Use only lowercase letters, numbers, and hyphens.", nameof(customSlug));
+            }
+            slug = customSlug;
         }
-        
-        // If still empty, reject the request
-        if (string.IsNullOrEmpty(slug))
+        else
         {
-            throw new ArgumentException("Basket name must contain at least one valid character for slug generation.", nameof(name));
+            // Generate slug from name
+            slug = SlugHelper.Slugify(name);
+            
+            if (string.IsNullOrEmpty(slug))
+            {
+                throw new ArgumentException("Basket name must contain at least one valid character for slug generation.", nameof(name));
+            }
         }
         
         // Ensure slug uniqueness for this user

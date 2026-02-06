@@ -105,7 +105,7 @@ public class BasketService : IBasketService
         try
         {
             Basket basket = await _basketRepository.GetByIdAsync(basketId, ct)
-                         ?? throw new InvalidOperationException("Basket not found");
+                         ?? throw new ArgumentNullException(nameof(basketId), "Basket not found");
 
             if (basket.UserId != userId)
                 return null;
@@ -115,7 +115,7 @@ public class BasketService : IBasketService
 
             // Retrieve item
             Item item = await _itemService.GetByIdAsync(itemId, ct)
-                       ?? throw new InvalidOperationException("Item not found");
+                       ?? throw new ArgumentNullException(nameof(itemId), "Item not found");
 
             BasketItem basketItem = new BasketItem(basket, item);
 

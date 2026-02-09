@@ -12,15 +12,15 @@ using healthri_basket_api.Database;
 namespace healthri_basket_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250929091113_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260209171854_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -106,19 +106,19 @@ namespace healthri_basket_api.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("ead26b2a-08a6-4eae-a95e-0dd29c0c3a3b"),
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             Description = "Collection of patient monitoring data of premature infants, ECG, CI and parameters as SpO2 and Temp. Half of the infants experienced a period of late onset sepsis during their hospital stay, the other half does not.",
                             Title = "NEOLOS - physiological measurements of preterm infants with and without late onset sepsis"
                         },
                         new
                         {
-                            Id = new Guid("ee365d89-d86a-48fe-a9d6-a5206f070ba3"),
+                            Id = new Guid("11111111-1111-1111-1111-222222222222"),
                             Description = "Infectiepreventie van COVID-19 in ziekenhuizen - omgevingsstudie; COntrol of COVID-19 iN Hospitals - environmental study",
                             Title = "COntrol of COVID-19 iN Hospitals - environmental study"
                         },
                         new
                         {
-                            Id = new Guid("1c5fa233-0c7c-4335-9ad8-0085caf32e20"),
+                            Id = new Guid("11111111-1111-1111-1111-333333333333"),
                             Description = "ctDNA on the way to implementation in the Netherlands (COIN)",
                             Title = "ctDNA on the way to implementation in the Netherlands (COIN)"
                         });
@@ -158,13 +158,13 @@ namespace healthri_basket_api.Migrations
                     b.HasOne("healthri_basket_api.Models.Basket", "Basket")
                         .WithMany("Items")
                         .HasForeignKey("BasketId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("healthri_basket_api.Models.Item", "Item")
                         .WithMany("Baskets")
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Basket");

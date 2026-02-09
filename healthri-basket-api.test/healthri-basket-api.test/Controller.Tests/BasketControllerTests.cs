@@ -5,6 +5,7 @@ using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Moq;
 using System.Security.Claims;
 
@@ -33,7 +34,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 new ClaimsIdentity(
                     new[]
                     {
-                        new Claim("sub", userId.ToString()),
+                        new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                     },
                     "mock"));
 
@@ -171,7 +172,7 @@ namespace healthri_basket_api.test.Controller.Tests
             // Mock authenticated user
             ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
             [
-                new Claim("sub", userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             ], "mock"));
 
             _basketController.ControllerContext = new ControllerContext
@@ -260,7 +261,7 @@ namespace healthri_basket_api.test.Controller.Tests
             // Mock authenticated user
             ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
             [
-                new Claim("sub", userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             ], "mock"));
 
             _basketController.ControllerContext = new ControllerContext

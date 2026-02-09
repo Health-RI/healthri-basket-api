@@ -34,7 +34,7 @@ builder.Services.AddDbContextPool<AppDbContext>(opt =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(jwtOptions =>
 {
-    jwtOptions.RequireHttpsMetadata = false;
+    jwtOptions.RequireHttpsMetadata = true;
     jwtOptions.Authority = openIdConfig.Authority;
     jwtOptions.Audience = openIdConfig.Audience;
     jwtOptions.TokenValidationParameters = new TokenValidationParameters

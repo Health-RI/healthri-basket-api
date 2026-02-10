@@ -8,9 +8,8 @@ namespace healthri_basket_api.Models;
 public class Basket(Guid userId, string slug, string name, bool isDefault)
 {
     [Key]
-    public required Guid Id { get; set; } = Guid.NewGuid();
-
-    public required Guid UserId { get; set; } = userId;
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public required Guid UserId { get; init; } = userId;
     public required string Slug { get; set; } = slug;
     public required string Name { get; set; } = name;
     public required bool IsDefault { get; set; } = isDefault;

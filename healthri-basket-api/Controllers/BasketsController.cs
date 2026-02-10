@@ -41,7 +41,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpGet("{slug}")]
     public async Task<IActionResult> Get(string slug, CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         var basket = await service.GetBySlugAsync(userId, slug, ct);
         return basket != null ? Ok(basket) : NotFound();
     }

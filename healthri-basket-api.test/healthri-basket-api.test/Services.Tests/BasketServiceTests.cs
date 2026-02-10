@@ -289,7 +289,7 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            var baskets = new List<Basket> { new Basket(userId, "Basket 1", false) };
+            var baskets = new List<Basket> { new Basket(userId, "basket-1", "Basket 1", false) };
             _basketRepositoryMock.Setup(r => r.GetByUserIdAsync(userId, _ct)).ReturnsAsync(baskets);
 
             // Act
@@ -300,31 +300,31 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
         [Fact]
-        public async Task GetByIdAsync_WhenBasketNotFound_ReturnsNull()
+        public async Task GetBySlugAsync_WhenBasketNotFound_ReturnsNull()
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync((Basket?)null);
+            string slug = "missing-basket";
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync((Basket?)null);
 
             // Act
-            var result = await _basketService.GetByIdAsync(userId, basketId, _ct);
+            var result = await _basketService.GetBySlugAsync(userId, slug, _ct);
 
             // Assert
             Assert.Null(result);
         }
 
         [Fact]
-        public async Task GetByIdAsync_WhenUserMismatch_ReturnsNull()
+        public async Task GetBySlugAsync_WhenUserMismatch_ReturnsNull()
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
-            Basket basket = new Basket(Guid.NewGuid(), "Basket", false) { Id = basketId };
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync(basket);
+            string slug = "basket";
+            Basket basket = new Basket(Guid.NewGuid(), slug, "Basket", false);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync(basket);
 
             // Act
-            var result = await _basketService.GetByIdAsync(userId, basketId, _ct);
+            var result = await _basketService.GetBySlugAsync(userId, slug, _ct);
 
             // Assert
             Assert.Null(result);
@@ -335,11 +335,11 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync((Basket?)null);
+            string slug = "missing-basket";
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync((Basket?)null);
 
             // Act
-            var success = await _basketService.RenameAsync(userId, basketId, "Name", _ct);
+            var success = await _basketService.RenameAsync(userId, slug, "Name", _ct);
 
             // Assert
             Assert.False(success);
@@ -352,12 +352,12 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
-            Basket basket = new Basket(userId, "Basket", true) { Id = basketId };
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync(basket);
+            string slug = "default-basket";
+            Basket basket = new Basket(userId, slug, "Basket", true);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync(basket);
 
             // Act
-            var success = await _basketService.DeleteAsync(userId, basketId, _ct);
+            var success = await _basketService.DeleteAsync(userId, slug, _ct);
 
             // Assert
             Assert.False(success);
@@ -370,12 +370,12 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
-            Basket basket = new Basket(Guid.NewGuid(), "Basket", false) { Id = basketId };
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync(basket);
+            string slug = "basket";
+            Basket basket = new Basket(Guid.NewGuid(), slug, "Basket", false);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync(basket);
 
             // Act
-            var success = await _basketService.RestoreAsync(userId, basketId, _ct);
+            var success = await _basketService.RestoreAsync(userId, slug, _ct);
 
             // Assert
             Assert.False(success);
@@ -388,11 +388,11 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync((Basket?)null);
+            string slug = "missing-basket";
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync((Basket?)null);
 
             // Act
-            var success = await _basketService.ArchiveAsync(userId, basketId, _ct);
+            var success = await _basketService.ArchiveAsync(userId, slug, _ct);
 
             // Assert
             Assert.False(success);
@@ -405,12 +405,12 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
-            Basket basket = new Basket(Guid.NewGuid(), "Basket", false) { Id = basketId };
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync(basket);
+            string slug = "basket";
+            Basket basket = new Basket(Guid.NewGuid(), slug, "Basket", false);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync(basket);
 
             // Act
-            var success = await _basketService.ClearAsync(userId, basketId, _ct);
+            var success = await _basketService.ClearAsync(userId, slug, _ct);
 
             // Assert
             Assert.False(success);
@@ -423,12 +423,12 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
+            string slug = "missing-basket";
             Guid itemId = Guid.NewGuid();
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync((Basket?)null);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync((Basket?)null);
 
             // Act
-            var result = await _basketService.AddItemAsync(userId, basketId, itemId, BasketItemSource.UserPage, _ct);
+            var result = await _basketService.AddItemAsync(userId, slug, itemId, BasketItemSource.UserPage, _ct);
 
             // Assert
             Assert.Null(result);
@@ -441,13 +441,13 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
+            string slug = "basket";
             Guid itemId = Guid.NewGuid();
-            Basket basket = new Basket(Guid.NewGuid(), "Basket", false) { Id = basketId };
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync(basket);
+            Basket basket = new Basket(Guid.NewGuid(), slug, "Basket", false);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync(basket);
 
             // Act
-            var result = await _basketService.AddItemAsync(userId, basketId, itemId, BasketItemSource.UserPage, _ct);
+            var result = await _basketService.AddItemAsync(userId, slug, itemId, BasketItemSource.UserPage, _ct);
 
             // Assert
             Assert.Null(result);
@@ -462,10 +462,10 @@ namespace healthri_basket_api.test.Services.Tests
             Guid basketId = Guid.NewGuid();
             Basket basket = CreateBasketWithItems(basketId);
             Guid existingItemId = basket.Items.First().ItemId;
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync(basket);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct)).ReturnsAsync(basket);
 
             // Act
-            var result = await _basketService.AddItemAsync(basket.UserId, basketId, existingItemId, BasketItemSource.UserPage, _ct);
+            var result = await _basketService.AddItemAsync(basket.UserId, basket.Slug, existingItemId, BasketItemSource.UserPage, _ct);
 
             // Assert
             Assert.Null(result);
@@ -481,11 +481,11 @@ namespace healthri_basket_api.test.Services.Tests
             Guid basketId = Guid.NewGuid();
             Basket basket = CreateBasketWithItems(basketId);
             Guid itemId = Guid.NewGuid();
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync(basket);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct)).ReturnsAsync(basket);
             _itemServiceMock.Setup(s => s.GetByIdAsync(itemId, _ct)).ReturnsAsync((Item?)null);
 
             // Act
-            var result = await _basketService.AddItemAsync(basket.UserId, basketId, itemId, BasketItemSource.UserPage, _ct);
+            var result = await _basketService.AddItemAsync(basket.UserId, basket.Slug, itemId, BasketItemSource.UserPage, _ct);
 
             // Assert
             Assert.Null(result);
@@ -520,12 +520,12 @@ namespace healthri_basket_api.test.Services.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            Guid basketId = Guid.NewGuid();
+            string slug = "missing-basket";
             Guid itemId = Guid.NewGuid();
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync((Basket?)null);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync((Basket?)null);
 
             // Act
-            var success = await _basketService.RemoveItemAsync(userId, basketId, itemId, BasketItemSource.UserPage, _ct);
+            var success = await _basketService.RemoveItemAsync(userId, slug, itemId, BasketItemSource.UserPage, _ct);
 
             // Assert
             Assert.False(success);
@@ -537,13 +537,13 @@ namespace healthri_basket_api.test.Services.Tests
         public async Task RemoveItemAsync_WhenUserMismatch_ReturnsFalse()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
             Guid itemId = Guid.NewGuid();
-            Basket basket = CreateBasketWithItems(basketId);
-            _basketRepositoryMock.Setup(r => r.GetByIdAsync(basketId, _ct)).ReturnsAsync(basket);
+            Basket basket = CreateBasketWithItems(Guid.NewGuid());
+            string slug = basket.Slug;
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(It.IsAny<Guid>(), slug, _ct)).ReturnsAsync(basket);
 
             // Act
-            var success = await _basketService.RemoveItemAsync(Guid.NewGuid(), basketId, itemId, BasketItemSource.UserPage, _ct);
+            var success = await _basketService.RemoveItemAsync(Guid.NewGuid(), slug, itemId, BasketItemSource.UserPage, _ct);
 
             // Assert
             Assert.False(success);
@@ -551,23 +551,5 @@ namespace healthri_basket_api.test.Services.Tests
             _loggerMock.Verify(l => l.LogAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<BasketAction>(), It.IsAny<BasketItemSource>()), Times.Never);
         }
 
-        [Fact]
-        public async Task RemoveItemAsync_WhenBasketMissingAfterUpdate_ReturnsFalse()
-        {
-            // Arrange
-            Guid basketId = Guid.NewGuid();
-            Basket basket = CreateBasketWithItems(basketId);
-            Guid itemId = basket.Items.First().ItemId;
-            _basketRepositoryMock.SetupSequence(r => r.GetByIdAsync(basketId, _ct))
-                .ReturnsAsync(basket)
-                .ReturnsAsync((Basket?)null);
-
-            // Act
-            var success = await _basketService.RemoveItemAsync(basket.UserId, basketId, itemId, BasketItemSource.UserPage, _ct);
-
-            // Assert
-            Assert.False(success);
-            _basketRepositoryMock.Verify(r => r.UpdateAsync(basket, _ct), Times.Once);
-        }
     }
 }

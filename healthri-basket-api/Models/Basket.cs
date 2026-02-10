@@ -5,32 +5,21 @@ using System.ComponentModel.DataAnnotations;
 namespace healthri_basket_api.Models;
 
 [method: SetsRequiredMembers]
-public class Basket(Guid userId, string name, bool isDefault)
+public class Basket(Guid userId, string slug, string name, bool isDefault)
 {
     [Key]
-    public required Guid Id { get; set; }
-    public required Guid UserId { get; set; }
-    public required string Slug { get; set; }
-    public string Name { get; set; }
-    public bool IsDefault { get; set; }
-    public BasketStatus Status { get; set; }
-    public List<BasketItem> Items { get; set; }
+    public required Guid Id { get; set; } = Guid.NewGuid();
+
+    public required Guid UserId { get; set; } = userId;
+    public required string Slug { get; set; } = slug;
+    public required string Name { get; set; } = name;
+    public required bool IsDefault { get; set; } = isDefault;
+    public BasketStatus Status { get; set; } = BasketStatus.Active;
+    public List<BasketItem> Items { get; set; } = [];
     public DateTime? DeletedAt { get; set; }
     public DateTime? ArchivedAt { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    
-    public Basket(Guid userId, string slug, string name, bool isDefault) { 
-        Id = Guid.NewGuid();
-        UserId = userId;
-        Slug = slug;
-        Name = name;
-        IsDefault = isDefault;
-        Status = BasketStatus.Active;
-        Items = [];
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-    }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public void AddItem(Item item)
     {

@@ -34,6 +34,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 new ClaimsIdentity(
                     new[]
                     {
+                        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                         new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                     },
                     "mock"));
@@ -417,7 +418,6 @@ namespace healthri_basket_api.test.Controller.Tests
         }
     }
 }
-
 
 
 

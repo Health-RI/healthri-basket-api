@@ -21,7 +21,7 @@ public class BasketRepositoryTests
     {
         using var context = CreateContext();
         var repo = new BasketRepository(context);
-        var basket = new Basket(Guid.NewGuid(), "Basket", false);
+        var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
 
         await repo.CreateAsync(basket, CancellationToken.None);
 
@@ -34,7 +34,7 @@ public class BasketRepositoryTests
     {
         using var context = CreateContext();
         var repo = new BasketRepository(context);
-        var basket = new Basket(Guid.NewGuid(), "Basket", false);
+        var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
         context.Baskets.Add(basket);
         await context.SaveChangesAsync();
 
@@ -51,7 +51,7 @@ public class BasketRepositoryTests
     {
         using var context = CreateContext();
         var repo = new BasketRepository(context);
-        var basket = new Basket(Guid.NewGuid(), "Basket", false);
+        var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
         context.Baskets.Add(basket);
         await context.SaveChangesAsync();
 
@@ -66,7 +66,7 @@ public class BasketRepositoryTests
     {
         using var context = CreateContext();
         var repo = new BasketRepository(context);
-        var basket = new Basket(Guid.NewGuid(), "Basket", false);
+        var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
         var item = new Item("Item", "Desc");
         context.Baskets.Add(basket);
         context.Items.Add(item);
@@ -84,7 +84,7 @@ public class BasketRepositoryTests
     {
         using var context = CreateContext();
         var repo = new BasketRepository(context);
-        var basket = new Basket(Guid.NewGuid(), "Basket", false);
+        var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
         var item = new Item("Item", "Desc");
         var basketItem = new BasketItem(basket, item);
         context.Baskets.Add(basket);
@@ -104,9 +104,9 @@ public class BasketRepositoryTests
         using var context = CreateContext();
         var repo = new BasketRepository(context);
         Guid userId = Guid.NewGuid();
-        var basket1 = new Basket(userId, "Basket 1", false);
-        var basket2 = new Basket(userId, "Basket 2", false);
-        var otherBasket = new Basket(Guid.NewGuid(), "Other", false);
+        var basket1 = new Basket(userId, "basket-1", "Basket 1", false);
+        var basket2 = new Basket(userId, "basket-2", "Basket 2", false);
+        var otherBasket = new Basket(Guid.NewGuid(), "other", "Other", false);
         context.Baskets.AddRange(basket1, basket2, otherBasket);
         await context.SaveChangesAsync();
 
@@ -117,15 +117,15 @@ public class BasketRepositoryTests
     }
 
     [Fact]
-    public async Task GetByIdAsync_WhenCalled_ReturnsBasket()
+    public async Task GetBySlugAsync_WhenCalled_ReturnsBasket()
     {
         using var context = CreateContext();
         var repo = new BasketRepository(context);
-        var basket = new Basket(Guid.NewGuid(), "Basket", false);
+        var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
         context.Baskets.Add(basket);
         await context.SaveChangesAsync();
 
-        var result = await repo.GetByIdAsync(basket.Id, CancellationToken.None);
+        var result = await repo.GetBySlugAsync(basket.UserId, basket.Slug, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(basket.Id, result.Id);

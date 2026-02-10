@@ -17,7 +17,7 @@ jobs:
       - name: Install .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       - name: Install SonarScanner for .NET
         run: dotnet tool install --global dotnet-sonarscanner
@@ -28,6 +28,7 @@ jobs:
             /o:"health-ri" \
             /k:"Health-RI_healthri-basket-api" \
             /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.exclusions="**/Migrations/**" \
             /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

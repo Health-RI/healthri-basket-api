@@ -5,20 +5,12 @@ using healthri_basket_api.Models.Enums;
 
 namespace healthri_basket_api.Repositories;
 
-public class TransactionLoggerRepository : ITransactionLogger
+public class TransactionLoggerRepository(AppDbContext context) : ITransactionLogger
 {
-    private readonly AppDbContext _context;
-
-    public TransactionLoggerRepository(AppDbContext context)
+    public Task LogAsync(Guid userId, Guid basketId, Guid itemId, BasketAction action, BasketItemSource source)
     {
-        _context = context;
-    }
-
-    public Task LogAsync(Guid userUuid, Guid basketId, Guid itemId, BasketAction action, BasketItemSource source)
-    {
-        _context.Add(new TransactionLogEntry(userUuid, basketId, itemId, action, source));
-        _context.SaveChanges();
+        context.Add(new TransactionLogEntry(userId, basketId, itemId, action, source));
+        context.SaveChanges();
         return Task.CompletedTask;
     }
 }
-

@@ -3,18 +3,11 @@ using healthri_basket_api.Models;
 
 namespace healthri_basket_api.Services;
 
-public class ItemService : IItemService
+public class ItemService(IItemRepository itemRepository) : IItemService
 {
-    private readonly IItemRepository _itemRepository;
-
-    public ItemService(IItemRepository itemRepository)
-    {
-        _itemRepository = itemRepository;
-    }
-
     public async Task<Item?> GetByIdAsync(Guid id, CancellationToken ct)
     {
-        var item = await _itemRepository.GetByIdAsync(id, ct);
+        var item = await itemRepository.GetByIdAsync(id, ct);
         return item;
     }
 }

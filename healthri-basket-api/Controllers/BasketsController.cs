@@ -19,14 +19,12 @@ public class BasketsController(IBasketService service) : ControllerBase
         var rawUserId =
             User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
             User.FindFirstValue(ClaimTypes.NameIdentifier);
-
         if (rawUserId == null || !Guid.TryParse(rawUserId, out userId))
         {
             errorResult = Unauthorized("User ID in token invalid or not found.");
             userId = Guid.Empty;
             return false;
         }
-
         errorResult = null;
         return true;
     }
@@ -34,7 +32,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpGet("users")]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         IEnumerable<Basket> baskets = await service.GetByUserIdAsync(userId, ct);
         return Ok(baskets);
     }
@@ -52,7 +51,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     {
         try
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out var userId, out var error))
+                return error!;
             Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, createBasketDTO.Slug, ct);
             return CreatedAtAction(
                 nameof(Get),
@@ -68,7 +68,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPut("{slug}/rename")]
     public async Task<IActionResult> Rename(string slug, [FromBody] string name, CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         var result = await service.RenameAsync(userId, slug, name, ct);
         return result ? Ok() : NotFound();
     }
@@ -76,7 +77,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPost("{slug}/archive")]
     public async Task<IActionResult> Archive(string slug, CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         var result = await service.ArchiveAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
@@ -84,7 +86,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPost("{slug}/restore")]
     public async Task<IActionResult> Restore(string slug, CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         var result = await service.RestoreAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
@@ -92,7 +95,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpDelete("{slug}")]
     public async Task<IActionResult> Delete(string slug, CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         var result = await service.DeleteAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
@@ -100,7 +104,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPost("{slug}/items")]
     public async Task<IActionResult> AddItem(string slug, [FromBody] Guid itemId, CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         var result = await service.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, ct);
         return result != null ? Ok(result) : NotFound();
     }
@@ -108,7 +113,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpDelete("{slug}/items")]
     public async Task<IActionResult> Clear(string slug, CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         var result = await service.ClearAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
@@ -117,7 +123,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpDelete("{slug}/items/{itemId}")]
     public async Task<IActionResult> RemoveItem(string slug, Guid itemId, CancellationToken ct)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
         var result = await service.RemoveItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, ct);
         return result ? Ok() : NotFound();
     }

@@ -3,16 +3,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace healthri_basket_api.Database;
 
-public class AppDbContext : DbContext
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<Basket> Baskets { get; set; }
     public DbSet<BasketItem> BasketItems { get; set; }
     public DbSet<Item> Items { get; set; }
     public DbSet<TransactionLogEntry> TransactionLogs { get; set; }
 
-
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

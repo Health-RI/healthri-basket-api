@@ -15,6 +15,7 @@ public class Item
         this.Id = Id;
         this.Title = title;
         this.Description = description;
+        Baskets = [];
     }
 
     public Item(string title, string description)
@@ -25,4 +26,3 @@ public class Item
         Baskets = [];
     }
 }
-

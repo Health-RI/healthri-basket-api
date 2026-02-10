@@ -1,6 +1,4 @@
-﻿using dotenv.net;
-
-namespace healthri_basket_api.Config;
+﻿namespace healthri_basket_api.Config;
 
 public class DatabaseConfig
 {
@@ -11,7 +9,7 @@ public class DatabaseConfig
         var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
         if (string.IsNullOrEmpty(connectionString))
         {
-            throw new Exception("Database connection string environment variable is missing.");
+            throw new InvalidOperationException("Database connection string environment variable is missing.");
         }
         return new DatabaseConfig
         {

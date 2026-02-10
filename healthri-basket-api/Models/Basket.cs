@@ -1,14 +1,16 @@
 using healthri_basket_api.Models.Enums;
+using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel.DataAnnotations;
 
 namespace healthri_basket_api.Models;
 
-public class Basket
+[method: SetsRequiredMembers]
+public class Basket(Guid userId, string name, bool isDefault)
 {
     [Key]
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public string Slug { get; set; }
+    public required Guid Id { get; set; }
+    public required Guid UserId { get; set; }
+    public required string Slug { get; set; }
     public string Name { get; set; }
     public bool IsDefault { get; set; }
     public BasketStatus Status { get; set; }

@@ -25,7 +25,7 @@
     command: ["start-dev"]
 
   db:
-    image: postgres:16
+    image: postgres:18
     container_name: postgres
     # Exposing the Postgres port to the host is intended ONLY for local development.
     # Remove or restrict this in production environments to avoid security risks.
@@ -37,7 +37,7 @@
       POSTGRES_PASSWORD: test
       POSTGRES_DB: healthri_basket_api
     volumes:
-      - pg18data:/var/lib/postgresql/data
+      - pg18data:/var/lib/postgresql
   
   adminer:
     image: adminer

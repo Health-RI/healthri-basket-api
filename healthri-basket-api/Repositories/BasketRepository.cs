@@ -5,53 +5,46 @@ using Microsoft.EntityFrameworkCore;
 
 namespace healthri_basket_api.Repositories;
 
-public class BasketRepository : IBasketRepository
+public class BasketRepository(AppDbContext context) : IBasketRepository
 {
-    private readonly AppDbContext _context;
-
-    public BasketRepository(AppDbContext context)
-    {
-        _context = context;
-    }
     public async Task<Basket> CreateAsync(Basket basket, CancellationToken ct)
     {
-        await _context.Baskets.AddAsync(basket, ct);
-        await _context.SaveChangesAsync(ct);
+        await context.Baskets.AddAsync(basket, ct);
+        await context.SaveChangesAsync(ct);
         return basket;
     }
 
     public async Task<Basket> UpdateAsync(Basket basket, CancellationToken ct)
     {
-        _context.Baskets.Update(basket);
-        await _context.SaveChangesAsync(ct);
+        context.Baskets.Update(basket);
+        await context.SaveChangesAsync(ct);
         return basket;
     }
 
     public async Task<bool> DeleteAsync(Basket basket, CancellationToken ct)
     {
-        _context.Baskets.Remove(basket);
-        await _context.SaveChangesAsync(ct);
+        context.Baskets.Remove(basket);
+        await context.SaveChangesAsync(ct);
         return true;
     }
 
-    public async Task<bool> AddItemAsync(BasketItem item, CancellationToken ct)
+    public async Task<bool> AddItemAsync(BasketItem basketItem, CancellationToken ct)
     {
-        await _context.BasketItems.AddAsync(item, ct);
-        await _context.SaveChangesAsync(ct);
+        await context.BasketItems.AddAsync(basketItem, ct);
+        await context.SaveChangesAsync(ct);
         return true;
     }
 
-    public async Task<bool> RemoveItemAsync(BasketItem item, CancellationToken ct)
+    public async Task<bool> RemoveItemAsync(BasketItem basketItem, CancellationToken ct)
     {
-        _context.BasketItems.Remove(item);
-        await _context.SaveChangesAsync(ct);
+        context.BasketItems.Remove(basketItem);
+        await context.SaveChangesAsync(ct);
         return true;
     }
-
 
     public async Task<List<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)
     {
-        return await _context.Baskets
+        return await context.Baskets
             .Include(b => b.Items)
             .Where(b => b.UserId.Equals(userId))
             .ToListAsync(ct);
@@ -59,10 +52,9 @@ public class BasketRepository : IBasketRepository
 
     public async Task<Basket?> GetBySlugAsync(Guid userId, string slug, CancellationToken ct)
     {
-        return await _context.Baskets
+        return await context.Baskets
             .Include(b => b.Items)
                 .ThenInclude(bi => bi.Item)
             .FirstOrDefaultAsync(b => b.UserId == userId && b.Slug == slug, ct);
     }
-
 }

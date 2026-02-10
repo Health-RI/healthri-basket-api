@@ -1,10 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using healthri_basket_api.Controllers.DTOs;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace healthri_basket_api.Controllers;
 
@@ -13,7 +14,24 @@ namespace healthri_basket_api.Controllers;
 [Route("api/v1/baskets")]
 public class BasketsController(IBasketService service) : ControllerBase
 {
-    [HttpGet]
+    private bool TryGetUserId(out Guid userId, out IActionResult? errorResult)
+    {
+        var rawUserId =
+            User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
+            User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (rawUserId == null || !Guid.TryParse(rawUserId, out userId))
+        {
+            errorResult = Unauthorized("User ID in token invalid or not found.");
+            userId = Guid.Empty;
+            return false;
+        }
+
+        errorResult = null;
+        return true;
+    }
+
+    [HttpGet("users")]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

@@ -5,27 +5,21 @@ using healthri_basket_api.Models.Enums;
 
 namespace healthri_basket_api.Services;
 
-public class BasketService : IBasketService
+public class BasketService(IBasketRepository basketRepository, IItemService itemService, ITransactionLogger logger)
+    : IBasketService
 {
-    private readonly IBasketRepository _basketRepository;
-    private readonly IItemService _itemService;
-    private readonly ITransactionLogger _logger;
-
-    public BasketService(IBasketRepository basketRepository, IItemService itemService, ITransactionLogger logger)
-    {
-        _basketRepository = basketRepository;
-        _itemService = itemService;
-        _logger = logger;
-    }
-
     public async Task<IEnumerable<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)
     {
-        return await _basketRepository.GetByUserIdAsync(userId, ct);
+        return await basketRepository.GetByUserIdAsync(userId, ct);
     }
 
     public async Task<Basket?> GetBySlugAsync(Guid userId, string slug, CancellationToken ct)
     {
-        return await _basketRepository.GetBySlugAsync(userId, slug, ct);
+        var basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
+        if (basket == null || basket.UserId != userId)
+            return null;
+        
+        return basket;
     }
 
     public async Task<Basket> CreateAsync(Guid userId, string name, bool isDefault, string? customSlug, CancellationToken ct)
@@ -64,15 +58,15 @@ public class BasketService : IBasketService
         
         Basket basket = new Basket(userId, slug, name, isDefault);
         
-        await _basketRepository.CreateAsync(basket, ct);
-        await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.CreateBasket, BasketItemSource.UserPage);
+        await basketRepository.CreateAsync(basket, ct);
+        await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.CreateBasket, BasketItemSource.UserPage);
         return basket;
     }
 
     public async Task<bool> RenameAsync(Guid userId, string slug, string newName, CancellationToken ct)
     {
         Basket? basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         // Validate newName and ensure it generates a valid slug
         if (string.IsNullOrWhiteSpace(newName))
@@ -109,11 +103,17 @@ public class BasketService : IBasketService
     public async Task<bool> DeleteAsync(Guid userId, string slug, CancellationToken ct)
     {
         Basket? basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
-        if (basket == null || basket.IsDefault) return false;
+        if (basket == null || basket.UserId != userId || basket.IsDefault) return false;
 
         basket.Delete();
         await _basketRepository.UpdateAsync(basket, ct);
         await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.DeleteBasket, BasketItemSource.UserPage);
+        Basket? basket = await basketRepository.GetByIdAsync(basketId, ct);
+
+
+        basket.Delete();
+        await basketRepository.UpdateAsync(basket, ct);
+        await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage);
 
         return true;
     }
@@ -121,7 +121,7 @@ public class BasketService : IBasketService
     public async Task<bool> RestoreAsync(Guid userId, string slug, CancellationToken ct)
     {
         Basket? basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         basket.Restore();
         await _basketRepository.UpdateAsync(basket, ct);
@@ -133,7 +133,7 @@ public class BasketService : IBasketService
     public async Task<bool> ArchiveAsync(Guid userId, string slug, CancellationToken ct)
     {
         Basket? basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         basket.Archive();
         await _basketRepository.UpdateAsync(basket, ct);
@@ -145,11 +145,13 @@ public class BasketService : IBasketService
     public async Task<bool> ClearAsync(Guid userId, string slug, CancellationToken ct)
     {
         Basket? basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         basket.ClearItems();
         await _basketRepository.UpdateAsync(basket, ct);
         await _logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.ClearBasket, BasketItemSource.UserPage);
+
+        Basket? basket = await basketRepository.GetByIdAsync(basketId, ct);
 
         return true;
     }
@@ -161,21 +163,23 @@ public class BasketService : IBasketService
             Basket? basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
             if (basket == null)
                 throw new InvalidOperationException("Basket not found");
+            if (basket.UserId != userId)
+                return null;
 
             if (basket.HasItem(itemId))
                 throw new InvalidOperationException("Item already in basket");
 
             // Retrieve item
-            Item item = await _itemService.GetByIdAsync(itemId, ct)
+            Item item = await itemService.GetByIdAsync(itemId, ct)
                        ?? throw new InvalidOperationException("Item not found");
 
             BasketItem basketItem = new BasketItem(basket, item);
 
-            await _basketRepository.AddItemAsync(basketItem, ct);
+            await basketRepository.AddItemAsync(basketItem, ct);
 
             basket.AddItem(item); // Update in-memory
 
-            await _logger.LogAsync(basket.UserId, basket.Id, item.Id, BasketAction.AddItem, source);
+            await logger.LogAsync(basket.UserId, basket.Id, item.Id, BasketAction.AddItem, source);
 
             return basket;
         }
@@ -186,17 +190,16 @@ public class BasketService : IBasketService
         }
     }
 
-
     public async Task<bool> RemoveItemAsync(Guid userId, string slug, Guid itemId, BasketItemSource source, CancellationToken ct)
     {
         Basket? basket = await _basketRepository.GetBySlugAsync(userId, slug, ct);
-        if (basket == null) return false;
+        if (basket == null || basket.UserId != userId) return false;
 
         // Update in-memory basket model
         basket.RemoveItem(itemId);
 
-        await _basketRepository.UpdateAsync(basket, ct);
-        await _logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.RemoveItem, source);
+        await basketRepository.UpdateAsync(basket, ct);
+        await logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.RemoveItem, source);
 
         return true;
     }

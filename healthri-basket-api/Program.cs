@@ -55,8 +55,14 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+var isEfDesignTime = string.Equals(
+    Environment.GetEnvironmentVariable("EF_DESIGNTIME"),
+    "true",
+    StringComparison.OrdinalIgnoreCase);
+
+if (!isEfDesignTime)
 {
+    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.MigrateAsync();
 }
@@ -71,4 +77,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-await app.RunAsync();
+if (!isEfDesignTime)
+{
+    await app.RunAsync();
+}

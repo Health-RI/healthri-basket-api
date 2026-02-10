@@ -144,7 +144,7 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
         basket.ClearItems();
         await basketRepository.UpdateAsync(basket, ct);
         await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.ClearBasket, BasketItemSource.UserPage);
-
+        
         return true;
     }
 
@@ -192,7 +192,7 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
 
         await basketRepository.UpdateAsync(basket, ct);
         await logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.RemoveItem, source);
-
+        
         return true;
     }
 }

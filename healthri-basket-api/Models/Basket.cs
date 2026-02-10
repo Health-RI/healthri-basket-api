@@ -1,22 +1,29 @@
-using healthri_basket_api.Models.Enums;
 using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using healthri_basket_api.Models.Enums;
 
 namespace healthri_basket_api.Models;
 
 [method: SetsRequiredMembers]
 public class Basket(Guid userId, string slug, string name, bool isDefault)
 {
-    [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();
+    [Key] public Guid Id { get; set; } = Guid.NewGuid();
     public required Guid UserId { get; init; } = userId;
+    
+    [Column(TypeName = "VARCHAR")]
+    [StringLength(250)]
     public required string Slug { get; set; } = slug;
+    
+    [Column(TypeName = "VARCHAR")]
+    [StringLength(250)]
     public required string Name { get; set; } = name;
     public required bool IsDefault { get; set; } = isDefault;
     public BasketStatus Status { get; set; } = BasketStatus.Active;
-    public List<BasketItem> Items { get; set; } = [];
+    public List<BasketItem> Items { get; init; } = [];
     public DateTime? DeletedAt { get; set; }
     public DateTime? ArchivedAt { get; set; }
+    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

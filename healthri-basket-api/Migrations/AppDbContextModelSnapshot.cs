@@ -42,11 +42,13 @@ namespace healthri_basket_api.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(250)
+                        .HasColumnType("VARCHAR");
 
                     b.Property<string>("Slug")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(250)
+                        .HasColumnType("VARCHAR");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");

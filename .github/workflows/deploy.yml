@@ -1,6 +1,9 @@
 name: Deploy Basket API to Azure Container Apps
 
 on:
+  push:
+    branches:
+      - '**'
   workflow_dispatch:
     inputs:
       environment:

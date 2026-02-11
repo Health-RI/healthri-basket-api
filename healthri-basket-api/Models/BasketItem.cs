@@ -22,9 +22,9 @@ public class BasketItem
     
     [Key]
     public Guid Id { get; init; }
-    public Guid BasketId { get; set; }
-    public required Basket Basket{ get; set; }
-    public Guid ItemId { get; set; }
-    public required Item Item{ get; set; }
-    public BasketItemStatus Status { get; set; }
+    public Guid BasketId { get; init; }
+    public required Basket Basket{ get; init; }
+    public Guid ItemId { get; init; }
+    public required Item Item{ get; init; }
+    public BasketItemStatus Status { get; init; }
 }

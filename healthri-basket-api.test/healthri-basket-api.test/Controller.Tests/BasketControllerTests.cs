@@ -34,6 +34,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 new ClaimsIdentity(
                     new[]
                     {
+                        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                         new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                     },
                     "mock"));
@@ -47,7 +48,7 @@ namespace healthri_basket_api.test.Controller.Tests
         private Basket CreateBasketWithItems(Guid? basketId)
         {
             Guid userId = Guid.NewGuid();
-            var basket = new Basket(userId, "TestBasket", true);
+            var basket = new Basket(userId, "test-basket", "TestBasket", true);
             var items = new List<Item>
             {
                 new Item("Item 1", "Description 1"),
@@ -72,7 +73,7 @@ namespace healthri_basket_api.test.Controller.Tests
         {
             // Arrange
             Guid userId = Guid.NewGuid();
-            List<Basket> userBaskets = new List<Basket> { new Basket(userId, "User basket", true) };
+            List<Basket> userBaskets = new List<Basket> { new Basket(userId, "user-basket", "User basket", true) };
 
             _basketServiceMock.Setup(s => s.GetByUserIdAsync(userId, _ct)).ReturnsAsync(userBaskets);
 
@@ -93,12 +94,12 @@ namespace healthri_basket_api.test.Controller.Tests
             Guid basketId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
 
-            _basketServiceMock.Setup(s => s.GetByIdAsync(expectedBasket.UserId, expectedBasket.Id, _ct)).ReturnsAsync(expectedBasket);
+            _basketServiceMock.Setup(s => s.GetBySlugAsync(expectedBasket.UserId, expectedBasket.Slug, _ct)).ReturnsAsync(expectedBasket);
 
             SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
-            IActionResult result = await _basketController.Get(expectedBasket.Id, _ct);
+            IActionResult result = await _basketController.Get(expectedBasket.Slug, _ct);
 
             // Assert
             OkObjectResult actionResult = Assert.IsType<OkObjectResult>(result);
@@ -109,16 +110,16 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task GetById_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
             Basket? expectedBasket = null;
 
-            _basketServiceMock.Setup(s => s.GetByIdAsync(userId, basketId, _ct)).ReturnsAsync(expectedBasket);
+            _basketServiceMock.Setup(s => s.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync(expectedBasket);
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Get(basketId, _ct);
+            IActionResult result = await _basketController.Get(slug, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -136,7 +137,7 @@ namespace healthri_basket_api.test.Controller.Tests
                 IsDefault = true
             };
 
-            Basket expectedBasket = new Basket(userId, createBasketDTO.Name, createBasketDTO.IsDefault)
+            Basket expectedBasket = new Basket(userId, "my-basket", createBasketDTO.Name, createBasketDTO.IsDefault)
             {
                 Id = basketId
             };
@@ -144,7 +145,7 @@ namespace healthri_basket_api.test.Controller.Tests
             SetAuthenticatedUser(userId);
 
             _basketServiceMock
-                .Setup(s => s.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, _ct))
+                .Setup(s => s.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, createBasketDTO.Slug, _ct))
                 .ReturnsAsync(expectedBasket);
 
             // Act
@@ -161,27 +162,18 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task Rename_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Basket expectedBasket = CreateBasketWithItems(Guid.NewGuid());
             string newName = "New basket name";
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.RenameAsync(userId, basketId, newName, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.RenameAsync(userId, slug, newName, _ct)).ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Rename(basketId, newName, _ct);
+            IActionResult result = await _basketController.Rename(slug, newName, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -191,17 +183,17 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task Rename_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
             string newName = "New basket name";
             bool expectedResponse = false;
 
-            _basketServiceMock.Setup(s => s.RenameAsync(userId, basketId, newName, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.RenameAsync(userId, slug, newName, _ct)).ReturnsAsync(expectedResponse);
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Rename(basketId, newName, _ct);
+            IActionResult result = await _basketController.Rename(slug, newName, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -211,17 +203,17 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task Archive_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Basket expectedBasket = CreateBasketWithItems(Guid.NewGuid());
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.ArchiveAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.ArchiveAsync(userId, slug, _ct)).ReturnsAsync(expectedResponse);
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Archive(basketId, _ct);
+            IActionResult result = await _basketController.Archive(slug, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -231,17 +223,17 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task Restore_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Basket expectedBasket = CreateBasketWithItems(Guid.NewGuid());
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.RestoreAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.RestoreAsync(userId, slug, _ct)).ReturnsAsync(expectedResponse);
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Restore(basketId, _ct);
+            IActionResult result = await _basketController.Restore(slug, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -251,26 +243,17 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task Delete_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Basket expectedBasket = CreateBasketWithItems(Guid.NewGuid());
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.DeleteAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.DeleteAsync(userId, slug, _ct)).ReturnsAsync(expectedResponse);
 
-            // Mock authenticated user
-            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            ], "mock"));
-
-            _basketController.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Delete(basketId, _ct);
+            IActionResult result = await _basketController.Delete(slug, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -280,17 +263,17 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task Delete_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Basket expectedBasket = CreateBasketWithItems(Guid.NewGuid());
             bool expectedResponse = false;
 
-            _basketServiceMock.Setup(s => s.DeleteAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.DeleteAsync(userId, slug, _ct)).ReturnsAsync(expectedResponse);
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Delete(basketId, _ct);
+            IActionResult result = await _basketController.Delete(slug, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -300,17 +283,17 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task Clear_WhenBasketExists_ReturnsOk()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Basket expectedBasket = CreateBasketWithItems(Guid.NewGuid());
             bool expectedResponse = true;
 
-            _basketServiceMock.Setup(s => s.ClearAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.ClearAsync(userId, slug, _ct)).ReturnsAsync(expectedResponse);
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Clear(basketId, _ct);
+            IActionResult result = await _basketController.Clear(slug, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -320,17 +303,17 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task Clear_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Basket expectedBasket = CreateBasketWithItems(basketId);
+            Basket expectedBasket = CreateBasketWithItems(Guid.NewGuid());
             bool expectedResponse = false;
 
-            _basketServiceMock.Setup(s => s.ClearAsync(userId, basketId, _ct)).ReturnsAsync(expectedResponse);
+            _basketServiceMock.Setup(s => s.ClearAsync(userId, slug, _ct)).ReturnsAsync(expectedResponse);
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.Clear(basketId, _ct);
+            IActionResult result = await _basketController.Clear(slug, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -347,13 +330,13 @@ namespace healthri_basket_api.test.Controller.Tests
             expectedBasket.AddItem(item);
 
             _basketServiceMock
-                .Setup(s => s.AddItemAsync(expectedBasket.UserId, expectedBasket.Id, item.Id, BasketItemSource.CatalogPage, _ct))
+                .Setup(s => s.AddItemAsync(expectedBasket.UserId, expectedBasket.Slug, item.Id, BasketItemSource.CatalogPage, _ct))
                 .ReturnsAsync(expectedBasket);
 
             SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
-            IActionResult result = await _basketController.AddItem(expectedBasket.Id, item.Id, _ct);
+            IActionResult result = await _basketController.AddItem(expectedBasket.Slug, item.Id, _ct);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -372,16 +355,16 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task AddItem_WhenItemOrBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
             Guid itemId = Guid.NewGuid();
 
-            _basketServiceMock.Setup(s => s.AddItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, _ct));
+            _basketServiceMock.Setup(s => s.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, _ct));
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.AddItem(basketId, itemId, _ct);
+            IActionResult result = await _basketController.AddItem(slug, itemId, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -399,13 +382,13 @@ namespace healthri_basket_api.test.Controller.Tests
 
 
             _basketServiceMock
-                .Setup(s => s.RemoveItemAsync(expectedBasket.UserId, basketId, itemToRemove.Id, BasketItemSource.CatalogPage, _ct)) 
+                .Setup(s => s.RemoveItemAsync(expectedBasket.UserId, expectedBasket.Slug, itemToRemove.Id, BasketItemSource.CatalogPage, _ct)) 
                 .ReturnsAsync(expectedResponse);
 
             SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
-            IActionResult result = await _basketController.RemoveItem(basketId, itemToRemove.Id, _ct);
+            IActionResult result = await _basketController.RemoveItem(expectedBasket.Slug, itemToRemove.Id, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
@@ -418,20 +401,23 @@ namespace healthri_basket_api.test.Controller.Tests
         public async Task RemoveItem_WhenItemDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            Guid basketId = Guid.NewGuid();
+            string slug = "test-slug";
             Guid userId = Guid.NewGuid();
             Guid itemId = Guid.NewGuid();
             bool expectedResponse = false;
 
-            _basketServiceMock.Setup(s => s.RemoveItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, _ct)).ReturnsAsync(expectedResponse);
-            
+            _basketServiceMock.Setup(s => s.RemoveItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, _ct)).ReturnsAsync(expectedResponse);
+
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.RemoveItem(basketId, itemId, _ct);
+            IActionResult result = await _basketController.RemoveItem(slug, itemId, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
     }
 }
+
+
+

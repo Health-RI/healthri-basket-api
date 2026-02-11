@@ -7,6 +7,7 @@ public enum BasketAction
     CreateBasket,
     DeleteBasket,
     ArchiveBasket,
+    RestoreBasket,
     ClearBasket,
     RenameBasket,
     GenerateRequestLink,

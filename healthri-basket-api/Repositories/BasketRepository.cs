@@ -42,7 +42,6 @@ public class BasketRepository(AppDbContext context) : IBasketRepository
         return true;
     }
 
-
     public async Task<List<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)
     {
         return await context.Baskets
@@ -51,11 +50,11 @@ public class BasketRepository(AppDbContext context) : IBasketRepository
             .ToListAsync(ct);
     }
 
-    public async Task<Basket?> GetByIdAsync(Guid id, CancellationToken ct)
+    public async Task<Basket?> GetBySlugAsync(Guid userId, string slug, CancellationToken ct)
     {
         return await context.Baskets
             .Include(b => b.Items)
-            .FirstOrDefaultAsync(b => b.Id.Equals(id), ct);
+                .ThenInclude(bi => bi.Item)
+            .FirstOrDefaultAsync(b => b.UserId == userId && b.Slug == slug, ct);
     }
-
 }

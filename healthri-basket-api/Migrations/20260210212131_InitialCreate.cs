@@ -19,7 +19,8 @@ namespace healthri_basket_api.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
+                    Slug = table.Column<string>(type: "VARCHAR", maxLength: 250, nullable: false),
+                    Name = table.Column<string>(type: "VARCHAR", maxLength: 250, nullable: false),
                     IsDefault = table.Column<bool>(type: "boolean", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -107,6 +108,12 @@ namespace healthri_basket_api.Migrations
                 name: "IX_BasketItems_ItemId",
                 table: "BasketItems",
                 column: "ItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Baskets_UserId_Slug",
+                table: "Baskets",
+                columns: new[] { "UserId", "Slug" },
+                unique: true);
         }
 
         /// <inheritdoc />

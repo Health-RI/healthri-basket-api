@@ -13,6 +13,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Unique constraint on UserId + Slug
+        modelBuilder.Entity<Basket>()
+            .HasIndex(b => new { b.UserId, b.Slug })
+            .IsUnique();
+
         // Basket -> BasketItems (Delete BasketItem on Basket deletion)
         modelBuilder.Entity<Basket>()
             .HasMany(b => b.Items)

@@ -19,14 +19,12 @@ public class BasketsController(IBasketService service) : ControllerBase
         var rawUserId =
             User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
             User.FindFirstValue(ClaimTypes.NameIdentifier);
-
         if (rawUserId == null || !Guid.TryParse(rawUserId, out userId))
         {
             errorResult = Unauthorized("User ID in token invalid or not found.");
             userId = Guid.Empty;
             return false;
         }
-
         errorResult = null;
         return true;
     }
@@ -36,18 +34,16 @@ public class BasketsController(IBasketService service) : ControllerBase
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
         IEnumerable<Basket> baskets = await service.GetByUserIdAsync(userId, ct);
         return Ok(baskets);
     }
     
-    [HttpGet("{basketId:guid}")]
-    public async Task<IActionResult> Get(Guid basketId, CancellationToken ct)
+    [HttpGet("{slug}")]
+    public async Task<IActionResult> Get(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
-        var basket = await service.GetByIdAsync(userId, basketId, ct);
+        var basket = await service.GetBySlugAsync(userId, slug, ct);
         return basket != null ? Ok(basket) : NotFound();
     }
 
@@ -58,87 +54,79 @@ public class BasketsController(IBasketService service) : ControllerBase
         {
             if (!TryGetUserId(out var userId, out var error))
                 return error!;
-
-            Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, ct);
+            Basket basket = await service.CreateAsync(userId, createBasketDTO.Name, createBasketDTO.IsDefault, createBasketDTO.Slug, ct);
             return CreatedAtAction(
                 nameof(Get),
-                new { basketId = basket.Id },
+                new { slug = basket.Slug },
                 basket);
-        } 
+        }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }
     }
 
-    [HttpPut("{basketId:guid}/rename")]
-    public async Task<IActionResult> Rename(Guid basketId, [FromBody] string name, CancellationToken ct)
+    [HttpPut("{slug}/rename")]
+    public async Task<IActionResult> Rename(string slug, [FromBody] string name, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
-        var result = await service.RenameAsync(userId, basketId, name, ct);
+        var result = await service.RenameAsync(userId, slug, name, ct);
         return result ? Ok() : NotFound();
     }
 
-    [HttpPost("{basketId:guid}/archive")]
-    public async Task<IActionResult> Archive(Guid basketId, CancellationToken ct)
+    [HttpPost("{slug}/archive")]
+    public async Task<IActionResult> Archive(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
-        var result = await service.ArchiveAsync(userId, basketId, ct);
+        var result = await service.ArchiveAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
 
-    [HttpPost("{basketId:guid}/restore")]
-    public async Task<IActionResult> Restore(Guid basketId, CancellationToken ct)
+    [HttpPost("{slug}/restore")]
+    public async Task<IActionResult> Restore(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
-        var result = await service.RestoreAsync(userId, basketId, ct);
+        var result = await service.RestoreAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
 
-    [HttpDelete("{basketId:guid}")]
-    public async Task<IActionResult> Delete(Guid basketId, CancellationToken ct)
+    [HttpDelete("{slug}")]
+    public async Task<IActionResult> Delete(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
-        var result = await service.DeleteAsync(userId, basketId, ct);
+        var result = await service.DeleteAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
 
-    [HttpPost("{basketId:guid}/items")]
-    public async Task<IActionResult> AddItem(Guid basketId, [FromBody] Guid itemId, CancellationToken ct)
+    [HttpPost("{slug}/items")]
+    public async Task<IActionResult> AddItem(string slug, [FromBody] Guid itemId, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
-        var result = await service.AddItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, ct);
+        var result = await service.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, ct);
         return result != null ? Ok(result) : NotFound();
     }
 
-    [HttpDelete("{basketId:guid}/items")]
-    public async Task<IActionResult> Clear(Guid basketId, CancellationToken ct)
+    [HttpDelete("{slug}/items")]
+    public async Task<IActionResult> Clear(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
-        var result = await service.ClearAsync(userId, basketId, ct);
+        var result = await service.ClearAsync(userId, slug, ct);
         return result ? Ok() : NotFound();
     }
 
 
-    [HttpDelete("{basketId:guid}/items/{itemId}")]
-    public async Task<IActionResult> RemoveItem(Guid basketId, Guid itemId, CancellationToken ct)
+    [HttpDelete("{slug}/items/{itemId}")]
+    public async Task<IActionResult> RemoveItem(string slug, Guid itemId, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-
-        var result = await service.RemoveItemAsync(userId, basketId, itemId, BasketItemSource.CatalogPage, ct);
+        var result = await service.RemoveItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, ct);
         return result ? Ok() : NotFound();
     }
 }

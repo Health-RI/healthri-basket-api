@@ -47,6 +47,7 @@ APIM_NAME=${APIM_NAME:-${DEFAULT_APIM_NAME}}
 APIM_API_ID=${APIM_API_ID:-basket}
 APIM_API_PATH=${APIM_API_PATH:-basket}
 APIM_SWAGGER_PATH=${APIM_SWAGGER_PATH:-/swagger/v1/swagger.json}
+APIM_SUBSCRIPTION_REQUIRED=${APIM_SUBSCRIPTION_REQUIRED:-false}
 
 if [ "${ENVIRONMENT}" = "test" ]; then
   APIM_NAME=""
@@ -190,7 +191,9 @@ if [ -n "${APIM_NAME}" ]; then
       --resource-group "${RESOURCE_GROUP}" \
       --service-name "${APIM_NAME}" \
       --api-id "${APIM_API_ID}" \
-      --set serviceUrl="${APP_SERVICE_URL}" path="${APIM_API_PATH}" >/dev/null
+      --service-url "${APP_SERVICE_URL}" \
+      --path "${APIM_API_PATH}" \
+      --subscription-required "${APIM_SUBSCRIPTION_REQUIRED}" >/dev/null
     echo "Updated APIM API '${APIM_API_ID}' to backend ${APP_SERVICE_URL}."
   else
     az apim api import \
@@ -200,6 +203,7 @@ if [ -n "${APIM_NAME}" ]; then
       --path "${APIM_API_PATH}" \
       --specification-format OpenApiJson \
       --specification-url "${APIM_SPEC_URL}" \
+      --subscription-required "${APIM_SUBSCRIPTION_REQUIRED}" \
       --service-url "${APP_SERVICE_URL}" >/dev/null
     echo "Created APIM API '${APIM_API_ID}' with path '${APIM_API_PATH}'."
   fi

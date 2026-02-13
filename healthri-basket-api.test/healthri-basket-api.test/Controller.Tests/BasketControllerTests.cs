@@ -371,6 +371,32 @@ namespace healthri_basket_api.test.Controller.Tests
         }
 
         [Fact]
+        public async Task AddItem_WhenItemAlreadyExistsInBasket_ReturnsConflict()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            string slug = "test-slug";
+            Guid itemId = Guid.NewGuid();
+            Basket basket = new Basket(userId, slug, "Test", false);
+            basket.AddItem(new Item(itemId, "Existing item", "Existing item description"));
+
+            _basketServiceMock
+                .Setup(s => s.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, _ct))
+                .ReturnsAsync((Basket?)null);
+            _basketServiceMock
+                .Setup(s => s.GetBySlugAsync(userId, slug, _ct))
+                .ReturnsAsync(basket);
+
+            SetAuthenticatedUser(userId);
+
+            // Act
+            IActionResult result = await _basketController.AddItem(slug, itemId, _ct);
+
+            // Assert
+            Assert.IsType<ConflictObjectResult>(result);
+        }
+
+        [Fact]
         public async Task RemoveItem_WhenItemIsRemovedSuccessfully_ReturnsOk()
         {
             // Arrange
@@ -418,6 +444,5 @@ namespace healthri_basket_api.test.Controller.Tests
         }
     }
 }
-
 
 

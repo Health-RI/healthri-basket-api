@@ -1,9 +1,6 @@
 name: Deploy Basket API to Azure Container Apps
 
 on:
-  push:
-    branches:
-      - '**'
   workflow_dispatch:
     inputs:
       environment:
@@ -75,3 +72,6 @@ jobs:
           REGISTRY: ${{ env.REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
+
+
+

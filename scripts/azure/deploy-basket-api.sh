@@ -9,17 +9,20 @@ case "${ENVIRONMENT}" in
     DEFAULT_RESOURCE_GROUP="healthri-test"
     DEFAULT_CONTAINERAPP_ENV="health-ri-aca-env-test"
     DEFAULT_APP_NAME="basket-api-test"
+    DEFAULT_APIM_NAME=""
     ;;
   acc)
     DEFAULT_RESOURCE_GROUP="healthri-uac"
     DEFAULT_CONTAINERAPP_ENV="health-ri-aca-env-acc"
     DEFAULT_APP_NAME="basket-api-acc"
+    DEFAULT_APIM_NAME="healthri-api-acc"
     ;;
   prod|prd)
     ENVIRONMENT="prod"
     DEFAULT_RESOURCE_GROUP="healthri"
     DEFAULT_CONTAINERAPP_ENV="health-ri-aca-env"
     DEFAULT_APP_NAME="basket-api"
+    DEFAULT_APIM_NAME="healthri-api"
     ;;
   *)
     echo "Unknown ENVIRONMENT '${ENVIRONMENT}'. Use test, acc, prod." >&2
@@ -40,6 +43,14 @@ MAX_REPLICAS=${MAX_REPLICAS:-1}
 WORKLOAD_PROFILE_NAME=${WORKLOAD_PROFILE_NAME:-}
 
 POSTGRES_RESOURCE_GROUP=${POSTGRES_RESOURCE_GROUP:-${RESOURCE_GROUP}}
+APIM_NAME=${APIM_NAME:-${DEFAULT_APIM_NAME}}
+APIM_API_ID=${APIM_API_ID:-basket}
+APIM_API_PATH=${APIM_API_PATH:-basket}
+APIM_SWAGGER_PATH=${APIM_SWAGGER_PATH:-/swagger/v1/swagger.json}
+
+if [ "${ENVIRONMENT}" = "test" ]; then
+  APIM_NAME=""
+fi
 
 DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-}
 OPENID_AUTHORITY=${OPENID_AUTHORITY:-}
@@ -154,6 +165,44 @@ else
     CREATE_ARGS+=("${REGISTRY_ARGS[@]}")
   fi
   az containerapp create "${CREATE_ARGS[@]}"
+fi
+
+APP_FQDN=$(az containerapp show \
+  --name "${APP_NAME}" \
+  --resource-group "${RESOURCE_GROUP}" \
+  --query "properties.configuration.ingress.fqdn" -o tsv)
+
+if [ -n "${APIM_NAME}" ]; then
+  if [ -z "${APP_FQDN}" ]; then
+    echo "Container App ingress FQDN is empty. Cannot update API Management." >&2
+    exit 1
+  fi
+
+  APP_SERVICE_URL="https://${APP_FQDN}"
+  APIM_SPEC_URL="${APP_SERVICE_URL}${APIM_SWAGGER_PATH}"
+
+  echo "Configuring API Management '${APIM_NAME}' for path '${APIM_API_PATH}'..."
+  if az apim api show \
+    --resource-group "${RESOURCE_GROUP}" \
+    --service-name "${APIM_NAME}" \
+    --api-id "${APIM_API_ID}" >/dev/null 2>&1; then
+    az apim api update \
+      --resource-group "${RESOURCE_GROUP}" \
+      --service-name "${APIM_NAME}" \
+      --api-id "${APIM_API_ID}" \
+      --set serviceUrl="${APP_SERVICE_URL}" path="${APIM_API_PATH}" >/dev/null
+    echo "Updated APIM API '${APIM_API_ID}' to backend ${APP_SERVICE_URL}."
+  else
+    az apim api import \
+      --resource-group "${RESOURCE_GROUP}" \
+      --service-name "${APIM_NAME}" \
+      --api-id "${APIM_API_ID}" \
+      --path "${APIM_API_PATH}" \
+      --specification-format OpenApiJson \
+      --specification-url "${APIM_SPEC_URL}" \
+      --service-url "${APP_SERVICE_URL}" >/dev/null
+    echo "Created APIM API '${APIM_API_ID}' with path '${APIM_API_PATH}'."
+  fi
 fi
 
 echo "Deployment of Container App ${APP_NAME} completed."

@@ -65,6 +65,10 @@ jobs:
           OPENID_AUTHORITY="${{ secrets.OPENID_AUTHORITY }}" \
           OPENID_ISSUER="${{ secrets.OPENID_ISSUER }}" \
           OPENID_AUDIENCE="${{ secrets.OPENID_AUDIENCE }}" \
+          OTEL_SERVICE_NAME="${{ vars.OTEL_SERVICE_NAME }}" \
+          OTEL_EXPORTER_OTLP_PROTOCOL="${{ vars.OTEL_EXPORTER_OTLP_PROTOCOL }}" \
+          OTEL_EXPORTER_OTLP_ENDPOINT="${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}" \
+          OTEL_EXPORTER_OTLP_HEADERS="${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}" \
           GHCR_USERNAME="${{ secrets.GHCR_USERNAME }}" \
           GHCR_PASSWORD="${{ secrets.GHCR_PASSWORD }}" \
           scripts/azure/deploy-basket-api.sh
@@ -72,6 +76,5 @@ jobs:
           REGISTRY: ${{ env.REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
-
 
 

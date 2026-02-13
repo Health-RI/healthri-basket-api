@@ -2,6 +2,7 @@
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using healthri_basket_api.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace healthri_basket_api.test.Services.Tests
@@ -25,7 +26,8 @@ namespace healthri_basket_api.test.Services.Tests
             _basketService = new BasketService(
                 _basketRepositoryMock.Object,
                 _itemServiceMock.Object,
-                _loggerMock.Object
+                _loggerMock.Object,
+                NullLogger<BasketService>.Instance
             );
         }
 
@@ -491,6 +493,39 @@ namespace healthri_basket_api.test.Services.Tests
             Assert.Null(result);
             _basketRepositoryMock.Verify(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct), Times.Never);
             _loggerMock.Verify(l => l.LogAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<BasketAction>(), It.IsAny<BasketItemSource>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddItemAsync_WhenTransactionLogFails_ReturnsUpdatedBasket()
+        {
+            // Arrange
+            Guid basketId = Guid.NewGuid();
+            Item item = new Item("Item 4", "Description 4");
+            BasketItemSource source = BasketItemSource.CatalogPage;
+            var basket = CreateBasketWithItems(basketId);
+            basket.Items.Clear();
+
+            _basketRepositoryMock
+                .Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct))
+                .ReturnsAsync(basket);
+            _itemServiceMock
+                .Setup(s => s.GetByIdAsync(item.Id, _ct))
+                .ReturnsAsync(item);
+            _basketRepositoryMock
+                .Setup(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct))
+                .ReturnsAsync(true);
+            _loggerMock
+                .Setup(l => l.LogAsync(basket.UserId, basket.Id, item.Id, BasketAction.AddItem, source))
+                .ThrowsAsync(new Exception("logging down"));
+
+            // Act
+            var result = await _basketService.AddItemAsync(basket.UserId, basket.Slug, item.Id, source, _ct);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Single(result!.Items);
+            Assert.Equal(item.Id, result.Items.First().ItemId);
+            _basketRepositoryMock.Verify(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct), Times.Once);
         }
 
         [Fact]

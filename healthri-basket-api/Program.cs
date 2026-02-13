@@ -7,8 +7,21 @@ using healthri_basket_api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.AddOpenTelemetry(options =>
+{
+    options.IncludeFormattedMessage = true;
+    options.IncludeScopes = true;
+    options.ParseStateValues = true;
+    options.SetResourceBuilder(
+        ResourceBuilder.CreateDefault().AddService(builder.Environment.ApplicationName)
+    );
+    options.AddOtlpExporter();
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

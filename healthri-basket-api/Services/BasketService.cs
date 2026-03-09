@@ -2,10 +2,16 @@ using healthri_basket_api.Helpers;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace healthri_basket_api.Services;
 
-public class BasketService(IBasketRepository basketRepository, IItemService itemService, ITransactionLogger logger)
+public class BasketService(
+    IBasketRepository basketRepository,
+    IItemService itemService,
+    ITransactionLogger logger,
+    ILogger<BasketService> loggerService
+)
     : IBasketService
 {
     public async Task<IEnumerable<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)
@@ -150,36 +156,32 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
 
     public async Task<Basket?> AddItemAsync(Guid userId, string slug, Guid itemId, BasketItemSource source, CancellationToken ct)
     {
+        Basket? basket = await basketRepository.GetBySlugAsync(userId, slug, ct);
+        if (basket == null || basket.UserId != userId)
+            return null;
+
+        if (basket.HasItem(itemId))
+            return null;
+
+        Item? item = await itemService.GetByIdAsync(itemId, ct);
+        if (item == null)
+            return null;
+
+        BasketItem basketItem = new BasketItem(basket, item);
+        await basketRepository.AddItemAsync(basketItem, ct);
+
+        basket.AddItem(item); // Update in-memory
+
         try
         {
-            Basket? basket = await basketRepository.GetBySlugAsync(userId, slug, ct);
-            if (basket == null)
-                throw new InvalidOperationException("Basket not found");
-            if (basket.UserId != userId)
-                return null;
-
-            if (basket.HasItem(itemId))
-                throw new InvalidOperationException("Item already in basket");
-
-            // Retrieve item
-            Item item = await itemService.GetByIdAsync(itemId, ct)
-                       ?? throw new InvalidOperationException("Item not found");
-
-            BasketItem basketItem = new BasketItem(basket, item);
-
-            await basketRepository.AddItemAsync(basketItem, ct);
-
-            basket.AddItem(item); // Update in-memory
-
             await logger.LogAsync(basket.UserId, basket.Id, item.Id, BasketAction.AddItem, source);
-
-            return basket;
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error adding item to basket: " + ex.Message);
-            return null;
+            loggerService.LogWarning(ex, "Unable to write transaction log for AddItem.");
         }
+
+        return basket;
     }
 
     public async Task<bool> RemoveItemAsync(Guid userId, string slug, Guid itemId, BasketItemSource source, CancellationToken ct)

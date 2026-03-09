@@ -1,0 +1,80 @@
+name: Deploy Basket API to Azure Container Apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        type: choice
+        required: true
+        options:
+          - test
+          - acc
+          - prod
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set image name (lowercase)
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: healthri-basket-api/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Container App
+        run: |
+          chmod +x scripts/azure/deploy-basket-api.sh
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}" \
+          ENVIRONMENT="${{ inputs.environment }}" \
+          DB_CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
+          OPENID_AUTHORITY="${{ secrets.OPENID_AUTHORITY }}" \
+          OPENID_ISSUER="${{ secrets.OPENID_ISSUER }}" \
+          OPENID_AUDIENCE="${{ secrets.OPENID_AUDIENCE }}" \
+          OTEL_SERVICE_NAME="${{ vars.OTEL_SERVICE_NAME }}" \
+          OTEL_EXPORTER_OTLP_PROTOCOL="${{ vars.OTEL_EXPORTER_OTLP_PROTOCOL }}" \
+          OTEL_EXPORTER_OTLP_ENDPOINT="${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}" \
+          OTEL_EXPORTER_OTLP_HEADERS="${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}" \
+          GHCR_USERNAME="${{ secrets.GHCR_USERNAME }}" \
+          GHCR_PASSWORD="${{ secrets.GHCR_PASSWORD }}" \
+          scripts/azure/deploy-basket-api.sh
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+
+

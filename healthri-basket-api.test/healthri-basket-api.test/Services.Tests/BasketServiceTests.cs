@@ -2,7 +2,6 @@
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
 using healthri_basket_api.Services;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace healthri_basket_api.test.Services.Tests
@@ -10,7 +9,6 @@ namespace healthri_basket_api.test.Services.Tests
     public class BasketServiceTests
     {
         private readonly Mock<IBasketRepository> _basketRepositoryMock;
-        private readonly Mock<IItemService> _itemServiceMock;
         private readonly Mock<ITransactionLogger> _loggerMock;
         private readonly BasketService _basketService;
         private readonly CancellationToken _ct;
@@ -20,14 +18,11 @@ namespace healthri_basket_api.test.Services.Tests
             _ct = CancellationToken.None;
 
             _basketRepositoryMock = new Mock<IBasketRepository>();
-            _itemServiceMock = new Mock<IItemService>();
             _loggerMock = new Mock<ITransactionLogger>();
 
             _basketService = new BasketService(
                 _basketRepositoryMock.Object,
-                _itemServiceMock.Object,
-                _loggerMock.Object,
-                NullLogger<BasketService>.Instance
+                _loggerMock.Object
             );
         }
 

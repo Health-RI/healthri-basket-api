@@ -21,20 +21,13 @@ namespace healthri_basket_api.Migrations
                 name: "IX_BasketItems_ItemId",
                 table: "BasketItems");
 
-            migrationBuilder.DeleteData(
-                table: "Items",
-                keyColumn: "Id",
-                keyValue: new Guid("11111111-1111-1111-1111-111111111111"));
-
-            migrationBuilder.DeleteData(
-                table: "Items",
-                keyColumn: "Id",
-                keyValue: new Guid("11111111-1111-1111-1111-222222222222"));
-
-            migrationBuilder.DeleteData(
-                table: "Items",
-                keyColumn: "Id",
-                keyValue: new Guid("11111111-1111-1111-1111-333333333333"));
+            migrationBuilder.Sql(
+                "DELETE FROM \"Items\" " +
+                "WHERE \"Id\" IN (" +
+                "'11111111-1111-1111-1111-111111111111'::uuid, " +
+                "'11111111-1111-1111-1111-222222222222'::uuid, " +
+                "'11111111-1111-1111-1111-333333333333'::uuid" +
+                ");");
 
             migrationBuilder.DropColumn(
                 name: "Description",

@@ -372,9 +372,9 @@ namespace healthri_basket_api.test.Controller.Tests
             // Arrange
             Guid userId = Guid.NewGuid();
             string slug = "test-slug";
-            Guid itemId = Guid.NewGuid();
+            string itemId = "existing-item";
             Basket basket = new Basket(userId, slug, "Test", false);
-            basket.AddItem(new Item(itemId, "Existing item", "Existing item description"));
+            basket.AddItem(itemId);
 
             _basketServiceMock
                 .Setup(s => s.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, _ct))
@@ -440,5 +440,4 @@ namespace healthri_basket_api.test.Controller.Tests
         }
     }
 }
-
 

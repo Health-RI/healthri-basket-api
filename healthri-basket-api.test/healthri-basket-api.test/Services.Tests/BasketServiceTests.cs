@@ -10,6 +10,7 @@ namespace healthri_basket_api.test.Services.Tests
     public class BasketServiceTests
     {
         private readonly Mock<IBasketRepository> _basketRepositoryMock;
+        private readonly Mock<IItemService> _itemServiceMock;
         private readonly Mock<ITransactionLogger> _loggerMock;
         private readonly BasketService _basketService;
         private readonly CancellationToken _ct;
@@ -19,6 +20,7 @@ namespace healthri_basket_api.test.Services.Tests
             _ct = CancellationToken.None;
 
             _basketRepositoryMock = new Mock<IBasketRepository>();
+            _itemServiceMock = new Mock<IItemService>();
             _loggerMock = new Mock<ITransactionLogger>();
 
             _basketService = new BasketService(
@@ -485,11 +487,11 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
         [Fact]
-        public async Task AddItemAsync_WhenTransactionLogFails_ReturnsUpdatedBasket()
+        public async Task AddItemAsync_WhenTransactionLogFails_ThrowsAndStillAddsItem()
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
-            Item item = new Item("Item 4", "Description 4");
+            string itemId = "item-4";
             BasketItemSource source = BasketItemSource.CatalogPage;
             var basket = CreateBasketWithItems(basketId);
             basket.Items.Clear();
@@ -497,23 +499,21 @@ namespace healthri_basket_api.test.Services.Tests
             _basketRepositoryMock
                 .Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct))
                 .ReturnsAsync(basket);
-            _itemServiceMock
-                .Setup(s => s.GetByIdAsync(item.Id, _ct))
-                .ReturnsAsync(item);
             _basketRepositoryMock
                 .Setup(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct))
                 .ReturnsAsync(true);
             _loggerMock
-                .Setup(l => l.LogAsync(basket.UserId, basket.Id, item.Id, BasketAction.AddItem, source))
+                .Setup(l => l.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.AddItem, source))
                 .ThrowsAsync(new Exception("logging down"));
 
             // Act
-            var result = await _basketService.AddItemAsync(basket.UserId, basket.Slug, item.Id, source, _ct);
+            var exception = await Assert.ThrowsAsync<Exception>(() =>
+                _basketService.AddItemAsync(basket.UserId, basket.Slug, itemId, source, _ct));
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Single(result!.Items);
-            Assert.Equal(item.Id, result.Items.First().ItemId);
+            Assert.Equal("logging down", exception.Message);
+            Assert.Single(basket.Items);
+            Assert.Equal(itemId, basket.Items.First().ItemId);
             _basketRepositoryMock.Verify(r => r.AddItemAsync(It.IsAny<BasketItem>(), _ct), Times.Once);
         }
 

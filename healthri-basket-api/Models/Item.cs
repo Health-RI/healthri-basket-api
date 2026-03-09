@@ -8,7 +8,8 @@ public class Item
     [Key]
     public required string Id { get; init; }
 
-    public Item()
+    // For EF Core materialization only.
+    private Item()
     {
     }
 

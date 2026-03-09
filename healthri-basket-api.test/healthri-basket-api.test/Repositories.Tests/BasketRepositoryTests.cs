@@ -67,15 +67,14 @@ public class BasketRepositoryTests
         using var context = CreateContext();
         var repo = new BasketRepository(context);
         var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
-        var item = new Item("Item", "Desc");
+        var itemId = "item-1";
         context.Baskets.Add(basket);
-        context.Items.Add(item);
         await context.SaveChangesAsync();
 
-        var basketItem = new BasketItem(basket, item);
+        var basketItem = new BasketItem(basket, itemId);
         await repo.AddItemAsync(basketItem, CancellationToken.None);
 
-        var exists = await context.BasketItems.AnyAsync(bi => bi.BasketId == basket.Id && bi.ItemId == item.Id);
+        var exists = await context.BasketItems.AnyAsync(bi => bi.BasketId == basket.Id && bi.ItemId == itemId);
         Assert.True(exists);
     }
 
@@ -85,10 +84,8 @@ public class BasketRepositoryTests
         using var context = CreateContext();
         var repo = new BasketRepository(context);
         var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
-        var item = new Item("Item", "Desc");
-        var basketItem = new BasketItem(basket, item);
+        var basketItem = new BasketItem(basket, "item-1");
         context.Baskets.Add(basket);
-        context.Items.Add(item);
         context.BasketItems.Add(basketItem);
         await context.SaveChangesAsync();
 

@@ -54,7 +54,6 @@ public class BasketRepository(AppDbContext context) : IBasketRepository
     {
         return await context.Baskets
             .Include(b => b.Items)
-                .ThenInclude(bi => bi.Item)
             .FirstOrDefaultAsync(b => b.UserId == userId && b.Slug == slug, ct);
     }
 }

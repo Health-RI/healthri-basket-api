@@ -13,6 +13,6 @@ public interface IBasketService
     Task<bool> RestoreAsync(Guid userId, string slug, CancellationToken ct);
     Task<bool> ArchiveAsync(Guid userId, string slug, CancellationToken ct);
     Task<bool> ClearAsync(Guid userId, string slug, CancellationToken ct);
-    Task<Basket?> AddItemAsync(Guid userId, string slug, Guid itemId, BasketItemSource source, CancellationToken ct);
-    Task<bool> RemoveItemAsync(Guid userId, string slug, Guid itemId, BasketItemSource source, CancellationToken ct);
+    Task<Basket?> AddItemAsync(Guid userId, string slug, string itemId, BasketItemSource source, CancellationToken ct);
+    Task<bool> RemoveItemAsync(Guid userId, string slug, string itemId, BasketItemSource source, CancellationToken ct);
 }

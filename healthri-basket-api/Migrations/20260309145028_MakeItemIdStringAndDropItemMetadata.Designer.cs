@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using healthri_basket_api.Database;
@@ -11,9 +12,11 @@ using healthri_basket_api.Database;
 namespace healthri_basket_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309145028_MakeItemIdStringAndDropItemMetadata")]
+    partial class MakeItemIdStringAndDropItemMetadata
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,8 +81,7 @@ namespace healthri_basket_api.Migrations
 
                     b.Property<string>("ItemId")
                         .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("text");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -94,8 +96,7 @@ namespace healthri_basket_api.Migrations
             modelBuilder.Entity("healthri_basket_api.Models.Item", b =>
                 {
                     b.Property<string>("Id")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -115,8 +116,7 @@ namespace healthri_basket_api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("ItemId")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+                        .HasColumnType("text");
 
                     b.Property<int>("Source")
                         .HasColumnType("integer");

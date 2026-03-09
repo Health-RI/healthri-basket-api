@@ -7,16 +7,15 @@ namespace healthri_basket_api.Models;
 public class BasketItem
 {
     // Parameterless constructor for EF Core
-    public BasketItem() { }
+    private BasketItem() { }
     
     [SetsRequiredMembers]
-    public BasketItem(Basket basket, Item item)
+    public BasketItem(Basket basket, string itemId)
     {
         Id = Guid.NewGuid();
         BasketId = basket.Id;
         Basket = basket;
-        ItemId = item.Id;
-        Item = item;
+        ItemId = itemId;
         Status = BasketItemStatus.InBasket;
     }
     
@@ -24,7 +23,6 @@ public class BasketItem
     public Guid Id { get; init; }
     public Guid BasketId { get; init; }
     public required Basket Basket{ get; init; }
-    public Guid ItemId { get; init; }
-    public required Item Item{ get; init; }
+    public required string ItemId { get; init; }
     public BasketItemStatus Status { get; init; }
 }

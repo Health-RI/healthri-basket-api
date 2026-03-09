@@ -103,7 +103,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpPost("{slug}/items")]
-    public async Task<IActionResult> AddItem(string slug, [FromBody] Guid itemId, CancellationToken ct)
+    public async Task<IActionResult> AddItem(string slug, [FromBody] string itemId, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
@@ -131,7 +131,7 @@ public class BasketsController(IBasketService service) : ControllerBase
 
 
     [HttpDelete("{slug}/items/{itemId}")]
-    public async Task<IActionResult> RemoveItem(string slug, Guid itemId, CancellationToken ct)
+    public async Task<IActionResult> RemoveItem(string slug, string itemId, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;

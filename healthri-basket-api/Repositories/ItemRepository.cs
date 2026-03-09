@@ -7,7 +7,7 @@ namespace healthri_basket_api.Repositories
 {
     public class ItemRepository(AppDbContext context) : IItemRepository
     {
-        public Task<Item?> GetByIdAsync(Guid id, CancellationToken ct)
+        public Task<Item?> GetByIdAsync(string id, CancellationToken ct)
         {
             return context.Items.FirstOrDefaultAsync(i => i.Id == id, cancellationToken: ct);
         }

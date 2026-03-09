@@ -7,7 +7,7 @@ namespace healthri_basket_api.Models;
 public class BasketItem
 {
     // Parameterless constructor for EF Core
-    public BasketItem() { }
+    private BasketItem() { }
     
     [SetsRequiredMembers]
     public BasketItem(Basket basket, string itemId)

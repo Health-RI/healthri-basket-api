@@ -1,28 +1,20 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace healthri_basket_api.Models;
 
 public class Item
 {
     [Key]
-    public Guid Id { get; init; }
-    public string Title { get; set; }
-    public string Description { get; set; }
-    public List<BasketItem> Baskets { get; set; }
+    public required string Id { get; init; }
 
-    public Item(Guid Id, string title, string description)
+    public Item()
     {
-        this.Id = Id;
-        this.Title = title;
-        this.Description = description;
-        Baskets = [];
     }
 
-    public Item(string title, string description)
+    [SetsRequiredMembers]
+    public Item(string id)
     {
-        Id = Guid.NewGuid();
-        Title = title;
-        Description = description;
-        Baskets = [];
+        Id = id;
     }
 }

@@ -5,7 +5,7 @@ using healthri_basket_api.Models.Enums;
 
 namespace healthri_basket_api.Services;
 
-public class BasketService(IBasketRepository basketRepository, IItemService itemService, ITransactionLogger logger)
+public class BasketService(IBasketRepository basketRepository, ITransactionLogger logger)
     : IBasketService
 {
     public async Task<IEnumerable<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)
@@ -59,7 +59,7 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
         Basket basket = new Basket(userId, slug, name, isDefault);
         
         await basketRepository.CreateAsync(basket, ct);
-        await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.CreateBasket, BasketItemSource.UserPage);
+        await logger.LogAsync(basket.UserId, basket.Id, null, BasketAction.CreateBasket, BasketItemSource.UserPage);
         return basket;
     }
 
@@ -95,7 +95,7 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
 
         basket.Rename(newName, newSlug);
         await basketRepository.UpdateAsync(basket, ct);
-        await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RenameBasket, BasketItemSource.UserPage);
+        await logger.LogAsync(basket.UserId, basket.Id, null, BasketAction.RenameBasket, BasketItemSource.UserPage);
 
         return true;
     }
@@ -107,7 +107,7 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
 
         basket.Delete();
         await basketRepository.UpdateAsync(basket, ct);
-        await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.DeleteBasket, BasketItemSource.UserPage);
+        await logger.LogAsync(basket.UserId, basket.Id, null, BasketAction.DeleteBasket, BasketItemSource.UserPage);
 
         return true;
     }
@@ -119,7 +119,7 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
 
         basket.Restore();
         await basketRepository.UpdateAsync(basket, ct);
-        await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.RestoreBasket, BasketItemSource.UserPage);
+        await logger.LogAsync(basket.UserId, basket.Id, null, BasketAction.RestoreBasket, BasketItemSource.UserPage);
 
         return true;
     }
@@ -131,7 +131,7 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
 
         basket.Archive();
         await basketRepository.UpdateAsync(basket, ct);
-        await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.ArchiveBasket, BasketItemSource.UserPage);
+        await logger.LogAsync(basket.UserId, basket.Id, null, BasketAction.ArchiveBasket, BasketItemSource.UserPage);
 
         return true;
     }
@@ -143,46 +143,37 @@ public class BasketService(IBasketRepository basketRepository, IItemService item
 
         basket.ClearItems();
         await basketRepository.UpdateAsync(basket, ct);
-        await logger.LogAsync(basket.UserId, basket.Id, Guid.Empty, BasketAction.ClearBasket, BasketItemSource.UserPage);
+        await logger.LogAsync(basket.UserId, basket.Id, null, BasketAction.ClearBasket, BasketItemSource.UserPage);
         
         return true;
     }
 
-    public async Task<Basket?> AddItemAsync(Guid userId, string slug, Guid itemId, BasketItemSource source, CancellationToken ct)
+    public async Task<Basket?> AddItemAsync(Guid userId, string slug, string itemId, BasketItemSource source, CancellationToken ct)
     {
-        try
+        if (string.IsNullOrWhiteSpace(itemId))
         {
-            Basket? basket = await basketRepository.GetBySlugAsync(userId, slug, ct);
-            if (basket == null)
-                throw new InvalidOperationException("Basket not found");
-            if (basket.UserId != userId)
-                return null;
-
-            if (basket.HasItem(itemId))
-                throw new InvalidOperationException("Item already in basket");
-
-            // Retrieve item
-            Item item = await itemService.GetByIdAsync(itemId, ct)
-                       ?? throw new InvalidOperationException("Item not found");
-
-            BasketItem basketItem = new BasketItem(basket, item);
-
-            await basketRepository.AddItemAsync(basketItem, ct);
-
-            basket.AddItem(item); // Update in-memory
-
-            await logger.LogAsync(basket.UserId, basket.Id, item.Id, BasketAction.AddItem, source);
-
-            return basket;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error adding item to basket: " + ex.Message);
             return null;
         }
+
+        Basket? basket = await basketRepository.GetBySlugAsync(userId, slug, ct);
+        if (basket == null || basket.UserId != userId)
+            return null;
+
+        if (basket.HasItem(itemId))
+            return null;
+
+        BasketItem basketItem = new BasketItem(basket, itemId);
+
+        await basketRepository.AddItemAsync(basketItem, ct);
+
+        basket.AddItem(itemId); // Update in-memory
+
+        await logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.AddItem, source);
+
+        return basket;
     }
 
-    public async Task<bool> RemoveItemAsync(Guid userId, string slug, Guid itemId, BasketItemSource source, CancellationToken ct)
+    public async Task<bool> RemoveItemAsync(Guid userId, string slug, string itemId, BasketItemSource source, CancellationToken ct)
     {
         Basket? basket = await basketRepository.GetBySlugAsync(userId, slug, ct);
         if (basket == null || basket.UserId != userId) return false;

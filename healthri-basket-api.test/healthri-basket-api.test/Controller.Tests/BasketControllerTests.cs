@@ -51,13 +51,13 @@ namespace healthri_basket_api.test.Controller.Tests
             var basket = new Basket(userId, "test-basket", "TestBasket", true);
             var items = new List<Item>
             {
-                new Item("Item 1", "Description 1"),
-                new Item("Item 2", "Description 2"),
-                new Item("Item 3", "Description 3"),
+                new Item("item-1"),
+                new Item("item-2"),
+                new Item("item-3"),
             };
             foreach (var item in items)
             {
-                basket.AddItem(item);
+                basket.AddItem(item.Id);
             }
 
             if (basketId.HasValue)
@@ -325,29 +325,25 @@ namespace healthri_basket_api.test.Controller.Tests
             // Arrange
             Guid basketId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
-            Item item = new Item("title a", "description a");
+            string itemId = "item-a";
             expectedBasket.ClearItems(); // Start with an empty basket for this test
-            expectedBasket.AddItem(item);
+            expectedBasket.AddItem(itemId);
 
             _basketServiceMock
-                .Setup(s => s.AddItemAsync(expectedBasket.UserId, expectedBasket.Slug, item.Id, BasketItemSource.CatalogPage, _ct))
+                .Setup(s => s.AddItemAsync(expectedBasket.UserId, expectedBasket.Slug, itemId, BasketItemSource.CatalogPage, _ct))
                 .ReturnsAsync(expectedBasket);
 
             SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
-            IActionResult result = await _basketController.AddItem(expectedBasket.Slug, item.Id, _ct);
+            IActionResult result = await _basketController.AddItem(expectedBasket.Slug, itemId, _ct);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnedBasket = Assert.IsType<Basket>(okResult.Value);
 
             Assert.Equal(expectedBasket, returnedBasket);
-
-            Item firstItem = returnedBasket.Items[0].Item;
-            Assert.Equal(firstItem.Id, item.Id);
-            Assert.Equal(firstItem.Title, item.Title);
-            Assert.Equal(firstItem.Description, item.Description);
+            Assert.Equal(itemId, returnedBasket.Items[0].ItemId);
         }
 
 
@@ -357,7 +353,7 @@ namespace healthri_basket_api.test.Controller.Tests
             // Arrange
             string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Guid itemId = Guid.NewGuid();
+            string itemId = "item-404";
 
             _basketServiceMock.Setup(s => s.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, _ct));
 
@@ -376,24 +372,24 @@ namespace healthri_basket_api.test.Controller.Tests
             // Arrange
             Guid basketId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
-            Item itemToRemove = expectedBasket.Items[0].Item;
+            string itemToRemoveId = expectedBasket.Items[0].ItemId;
             bool expectedResponse = true;
-            expectedBasket.RemoveItem(itemToRemove.Id);
+            expectedBasket.RemoveItem(itemToRemoveId);
 
 
             _basketServiceMock
-                .Setup(s => s.RemoveItemAsync(expectedBasket.UserId, expectedBasket.Slug, itemToRemove.Id, BasketItemSource.CatalogPage, _ct)) 
+                .Setup(s => s.RemoveItemAsync(expectedBasket.UserId, expectedBasket.Slug, itemToRemoveId, BasketItemSource.CatalogPage, _ct)) 
                 .ReturnsAsync(expectedResponse);
 
             SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
-            IActionResult result = await _basketController.RemoveItem(expectedBasket.Slug, itemToRemove.Id, _ct);
+            IActionResult result = await _basketController.RemoveItem(expectedBasket.Slug, itemToRemoveId, _ct);
 
             // Assert
             Assert.IsType<OkResult>(result);
             Assert.Equal(2, expectedBasket.Items.Count);
-            Assert.DoesNotContain(expectedBasket.Items, bi => bi.Item.Id == itemToRemove.Id);
+            Assert.DoesNotContain(expectedBasket.Items, bi => bi.ItemId == itemToRemoveId);
         }
 
 
@@ -403,7 +399,7 @@ namespace healthri_basket_api.test.Controller.Tests
             // Arrange
             string slug = "test-slug";
             Guid userId = Guid.NewGuid();
-            Guid itemId = Guid.NewGuid();
+            string itemId = "missing-item";
             bool expectedResponse = false;
 
             _basketServiceMock.Setup(s => s.RemoveItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, _ct)).ReturnsAsync(expectedResponse);
@@ -418,6 +414,5 @@ namespace healthri_basket_api.test.Controller.Tests
         }
     }
 }
-
 
 

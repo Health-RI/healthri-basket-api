@@ -27,14 +27,14 @@ public class Basket(Guid userId, string slug, string name, bool isDefault)
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public void AddItem(Item item)
+    public void AddItem(string itemId)
     {
-        var basketItem = new BasketItem(this, item);
+        var basketItem = new BasketItem(this, itemId);
         Items.Add(basketItem);
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RemoveItem(Guid itemId)
+    public void RemoveItem(string itemId)
     {
         BasketItem? basketItem = this.Items.FirstOrDefault(i => i.ItemId.Equals(itemId));
         if (basketItem == null){
@@ -45,7 +45,7 @@ public class Basket(Guid userId, string slug, string name, bool isDefault)
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public bool HasItem(Guid itemId)
+    public bool HasItem(string itemId)
     {
         return this.Items.Any(bi => bi.ItemId.Equals(itemId));
     }

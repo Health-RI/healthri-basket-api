@@ -5,7 +5,7 @@ namespace healthri_basket_api.Services;
 
 public class ItemService(IItemRepository itemRepository) : IItemService
 {
-    public async Task<Item?> GetByIdAsync(Guid id, CancellationToken ct)
+    public async Task<Item?> GetByIdAsync(string id, CancellationToken ct)
     {
         var item = await itemRepository.GetByIdAsync(id, ct);
         return item;

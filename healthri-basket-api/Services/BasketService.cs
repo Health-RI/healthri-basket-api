@@ -2,10 +2,16 @@ using healthri_basket_api.Helpers;
 using healthri_basket_api.Interfaces;
 using healthri_basket_api.Models;
 using healthri_basket_api.Models.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace healthri_basket_api.Services;
 
-public class BasketService(IBasketRepository basketRepository, ITransactionLogger logger)
+public class BasketService(
+    IBasketRepository basketRepository,
+    IItemService itemService,
+    ITransactionLogger logger,
+    ILogger<BasketService> loggerService
+)
     : IBasketService
 {
     public async Task<IEnumerable<Basket>> GetByUserIdAsync(Guid userId, CancellationToken ct)

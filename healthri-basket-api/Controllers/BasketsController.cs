@@ -108,7 +108,16 @@ public class BasketsController(IBasketService service) : ControllerBase
         if (!TryGetUserId(out var userId, out var error))
             return error!;
         var result = await service.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, ct);
-        return result != null ? Ok(result) : NotFound();
+        if (result != null)
+            return Ok(result);
+
+        // Service currently returns null for both "not found" and "already exists".
+        // Map duplicate add attempts to 409 to improve REST behavior.
+        var existingBasket = await service.GetBySlugAsync(userId, slug, ct);
+        if (existingBasket?.HasItem(itemId) == true)
+            return Conflict("Item already in basket.");
+
+        return NotFound();
     }
 
     [HttpDelete("{slug}/items")]

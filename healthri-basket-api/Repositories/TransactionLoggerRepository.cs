@@ -9,7 +9,7 @@ public class TransactionLoggerRepository(AppDbContext context) : ITransactionLog
 {
     public async Task LogAsync(Guid userId, Guid basketId, string? itemId, BasketAction action, BasketItemSource source)
     {
-        context.Add(new TransactionLogEntry(userId, basketId, itemId, action, source));
+        await context.TransactionLogs.AddAsync(new TransactionLogEntry(userId, basketId, itemId, action, source));
         await context.SaveChangesAsync();
     }
 }

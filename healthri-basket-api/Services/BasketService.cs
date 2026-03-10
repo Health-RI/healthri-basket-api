@@ -169,8 +169,6 @@ public class BasketService(
 
         await basketRepository.AddItemAsync(basketItem, ct);
 
-        basket.AddItem(itemId); // Update in-memory
-
         await logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.AddItem, source);
 
         return basket;

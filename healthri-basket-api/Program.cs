@@ -83,11 +83,7 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
 
 var app = builder.Build();
 
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await dbContext.Database.MigrateAsync();
-}
+await MigrateDatabase(app);
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -100,4 +96,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();
+
+async Task MigrateDatabase(WebApplication webApp)
+{
+    using var scope = webApp.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 

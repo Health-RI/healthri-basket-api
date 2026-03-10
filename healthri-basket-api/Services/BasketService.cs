@@ -169,6 +169,11 @@ public class BasketService(
 
         await basketRepository.AddItemAsync(basketItem, ct);
 
+        if (basket.Items.All(i => i.Id != basketItem.Id))
+        {
+            basket.Items.Add(basketItem);
+        }
+
         await logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.AddItem, source);
 
         return basket;

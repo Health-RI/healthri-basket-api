@@ -81,20 +81,9 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
 );
 
-
 var app = builder.Build();
 
-var isEfDesignTime = string.Equals(
-    Environment.GetEnvironmentVariable("EF_DESIGNTIME"),
-    "true",
-    StringComparison.OrdinalIgnoreCase);
-
-if (!isEfDesignTime)
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await dbContext.Database.MigrateAsync();
-}
+await MigrateDatabase(app);
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -106,7 +95,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-if (!isEfDesignTime)
+await app.RunAsync();
+
+async Task MigrateDatabase(WebApplication webApp)
 {
-    await app.RunAsync();
+    using var scope = webApp.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
 }
+

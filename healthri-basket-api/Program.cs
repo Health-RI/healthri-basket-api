@@ -40,7 +40,9 @@ builder.Services.AddOpenTelemetry()
             .AddOtlpExporter();
     });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -102,10 +104,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     }; 
     jwtOptions.MapInboundClaims = false;
 });
-
-builder.Services.AddControllers().AddNewtonsoftJson(options =>
-    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-);
 
 var app = builder.Build();
 

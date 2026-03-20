@@ -30,6 +30,8 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpGet("users")]
+    [ProducesResponseType(typeof(IEnumerable<Basket>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUserBaskets(CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
@@ -39,6 +41,9 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
     
     [HttpGet("{slug}")]
+    [ProducesResponseType(typeof(Basket), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Get(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
@@ -48,6 +53,9 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(Basket), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] CreateBasketDTO createBasketDTO, CancellationToken ct)
     {
         try
@@ -67,6 +75,9 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpPut("{slug}/rename")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Rename(string slug, [FromBody] string name, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
@@ -76,6 +87,9 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpPost("{slug}/archive")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Archive(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
@@ -85,6 +99,9 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpPost("{slug}/restore")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Restore(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
@@ -94,15 +111,22 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpDelete("{slug}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
         var result = await service.DeleteAsync(userId, slug, ct);
-        return result ? Ok() : NotFound();
+        return result ? NoContent() : NotFound();
     }
 
     [HttpPost("{slug}/items")]
+    [ProducesResponseType(typeof(Basket), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddItem(string slug, [FromBody] string itemId, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
@@ -121,6 +145,9 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpDelete("{slug}/items")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Clear(string slug, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
@@ -131,6 +158,9 @@ public class BasketsController(IBasketService service) : ControllerBase
 
 
     [HttpDelete("{slug}/items/{itemId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RemoveItem(string slug, string itemId, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))

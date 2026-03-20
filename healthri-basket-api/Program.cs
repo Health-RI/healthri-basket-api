@@ -7,6 +7,7 @@ using healthri_basket_api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
@@ -39,9 +40,36 @@ builder.Services.AddOpenTelemetry()
             .AddOtlpExporter();
     });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    const string jwtSecuritySchemeName = JwtBearerDefaults.AuthenticationScheme;
+
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Health-RI Basket API",
+        Version = "v1"
+    });
+
+    var jwtSecurityScheme = new OpenApiSecurityScheme
+    {
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Description = "JWT Bearer token. Example: 'Bearer {token}'"
+    };
+
+    options.AddSecurityDefinition(jwtSecuritySchemeName, jwtSecurityScheme);
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference(jwtSecuritySchemeName, document, null)] = []
+    });
+});
 
 // Dependency injection
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
@@ -77,10 +105,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     jwtOptions.MapInboundClaims = false;
 });
 
-builder.Services.AddControllers().AddNewtonsoftJson(options =>
-    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-);
-
 var app = builder.Build();
 
 await MigrateDatabase(app);
@@ -103,4 +127,3 @@ async Task MigrateDatabase(WebApplication webApp)
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.MigrateAsync();
 }
-

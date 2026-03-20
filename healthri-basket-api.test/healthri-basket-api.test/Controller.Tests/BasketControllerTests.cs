@@ -240,7 +240,7 @@ namespace healthri_basket_api.test.Controller.Tests
         }
 
         [Fact]
-        public async Task Delete_WhenBasketExists_ReturnsOk()
+        public async Task Delete_WhenBasketExists_ReturnsNoContent()
         {
             // Arrange
             string slug = "test-slug";
@@ -256,7 +256,7 @@ namespace healthri_basket_api.test.Controller.Tests
             IActionResult result = await _basketController.Delete(slug, _ct);
 
             // Assert
-            Assert.IsType<OkResult>(result);
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -440,4 +440,3 @@ namespace healthri_basket_api.test.Controller.Tests
         }
     }
 }
-

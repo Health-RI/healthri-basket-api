@@ -111,7 +111,7 @@ public class BasketsController(IBasketService service) : ControllerBase
     }
 
     [HttpDelete("{slug}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(string slug, CancellationToken ct)
@@ -119,7 +119,7 @@ public class BasketsController(IBasketService service) : ControllerBase
         if (!TryGetUserId(out var userId, out var error))
             return error!;
         var result = await service.DeleteAsync(userId, slug, ct);
-        return result ? Ok() : NotFound();
+        return result ? NoContent() : NotFound();
     }
 
     [HttpPost("{slug}/items")]

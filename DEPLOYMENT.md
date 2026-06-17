@@ -50,31 +50,35 @@ The GitHub Actions workflow runs against a GitHub Environment named after the ch
 - `acc`
 - `prod`
 
-For automated deployment, you configure these values once in the GitHub Actions environment secrets and variables. You do not pass them on the command line when you trigger the workflow.
+For automated deployment, you configure the required values once in the GitHub Actions environment secrets and variables. You do not pass them on the command line when you trigger the workflow.
 
-Configure the following secrets and variables in the matching GitHub Actions environment:
+Configure these values in the matching GitHub Actions environment:
 
-Secrets:
+### GitHub Actions Only
 
-- `AZURE_CREDENTIALS`
-- `DB_CONNECTION_STRING`
-- `OPENID_AUTHORITY`
-- `OPENID_ISSUER`
-- `OPENID_AUDIENCE`
-- `OTEL_EXPORTER_OTLP_HEADERS`
+These are used by the deployment workflow itself, not by the app at runtime:
 
-Variables:
+- `AZURE_CREDENTIALS` secret
+- `GHCR_USERNAME` secret, only if the GHCR image is private
+- `GHCR_PASSWORD` secret, only if the GHCR image is private
 
-- `OTEL_SERVICE_NAME`
-- `OTEL_EXPORTER_OTLP_PROTOCOL`
-- `OTEL_EXPORTER_OTLP_ENDPOINT` if you use one
+### Required App Runtime Values
 
-Optional registry credentials:
+These are injected into the Container App and are required for the service to start:
 
-- `GHCR_USERNAME`
-- `GHCR_PASSWORD`
+- `DB_CONNECTION_STRING` secret
+- `OPENID_AUTHORITY` secret
+- `OPENID_ISSUER` secret
+- `OPENID_AUDIENCE` secret
 
-Use those only if the GHCR image is private and the Container App needs to pull it directly.
+### Optional Telemetry Values
+
+These are optional for runtime telemetry:
+
+- `OTEL_SERVICE_NAME` variable
+- `OTEL_EXPORTER_OTLP_PROTOCOL` variable
+- `OTEL_EXPORTER_OTLP_ENDPOINT` variable
+- `OTEL_EXPORTER_OTLP_HEADERS` secret
 
 If these values are already configured in the GitHub Actions environment, the workflow injects them automatically during deployment.
 

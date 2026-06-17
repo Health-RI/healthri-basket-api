@@ -50,9 +50,9 @@ The GitHub Actions workflow runs against a GitHub Environment named after the ch
 - `acc`
 - `prod`
 
-For automated deployment, you configure these values once in GitHub. You do not pass them on the command line when you trigger the workflow.
+For automated deployment, you configure these values once in the GitHub Actions environment secrets and variables. You do not pass them on the command line when you trigger the workflow.
 
-Configure the following secrets and variables in the matching GitHub Environment:
+Configure the following secrets and variables in the matching GitHub Actions environment:
 
 Secrets:
 
@@ -76,7 +76,7 @@ Optional registry credentials:
 
 Use those only if the GHCR image is private and the Container App needs to pull it directly.
 
-If these values are already configured in GitHub, the workflow injects them automatically during deployment.
+If these values are already configured in the GitHub Actions environment, the workflow injects them automatically during deployment.
 
 ### Prerequisites in Azure
 

@@ -32,3 +32,9 @@ curl -X POST "http://localhost:8080/api/v1/baskets/00000000-0000-0000-0000-00000
   -H "Content-Type: application/json" \
   -d '"My Sample Basket"'
 ```
+
+## Deployment
+
+Deployment is handled through GitHub Actions and Azure Container Apps.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the exact workflow, required secrets, and direct script invocation.

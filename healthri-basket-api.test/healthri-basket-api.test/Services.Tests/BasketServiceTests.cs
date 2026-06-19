@@ -513,6 +513,163 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
         [Fact]
+        public async Task AddItemsAsync_WhenItemsAndBasketExist_ReturnsUpdatedBasketAndAddsItems()
+        {
+            // Arrange
+            Guid basketId = Guid.NewGuid();
+            string[] itemIds = ["item-4", "item-5"];
+            BasketItemSource source = BasketItemSource.CatalogPage;
+            var basket = CreateBasketWithItems(basketId);
+            basket.Items.Clear();
+
+            _basketRepositoryMock
+                .Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct))
+                .ReturnsAsync(basket);
+            _basketRepositoryMock
+                .Setup(r => r.AddItemsAsync(It.IsAny<IEnumerable<BasketItem>>(), _ct))
+                .ReturnsAsync(true);
+
+            // Act
+            Basket? result = await _basketService.AddItemsAsync(basket.UserId, basket.Slug, itemIds, source, _ct);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(itemIds, result.Items.Select(i => i.ItemId));
+
+            _basketRepositoryMock.Verify(r => r.AddItemsAsync(It.Is<IEnumerable<BasketItem>>(
+                items => items.Select(i => i.ItemId).SequenceEqual(itemIds) && items.All(i => i.BasketId == basket.Id)
+            ), _ct), Times.Once);
+
+            foreach (var itemId in itemIds)
+            {
+                _loggerMock.Verify(l => l.LogAsync(basket.UserId, basketId, itemId, BasketAction.AddItem, source), Times.Once);
+            }
+        }
+
+        [Fact]
+        public async Task AddItemsAsync_WhenSomeItemsAlreadyExist_AddsOnlyNewItems()
+        {
+            // Arrange
+            Guid basketId = Guid.NewGuid();
+            BasketItemSource source = BasketItemSource.CatalogPage;
+            var basket = CreateBasketWithItems(basketId);
+            string existingItemId = basket.Items.First().ItemId;
+            string newItemId = "item-4";
+            string[] itemIds = [existingItemId, newItemId];
+
+            _basketRepositoryMock
+                .Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct))
+                .ReturnsAsync(basket);
+            _basketRepositoryMock
+                .Setup(r => r.AddItemsAsync(It.IsAny<IEnumerable<BasketItem>>(), _ct))
+                .ReturnsAsync(true);
+
+            // Act
+            Basket? result = await _basketService.AddItemsAsync(basket.UserId, basket.Slug, itemIds, source, _ct);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Contains(result.Items, i => i.ItemId == existingItemId);
+            Assert.Contains(result.Items, i => i.ItemId == newItemId);
+
+            _basketRepositoryMock.Verify(r => r.AddItemsAsync(It.Is<IEnumerable<BasketItem>>(
+                items => items.Single().ItemId == newItemId
+            ), _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basketId, newItemId, BasketAction.AddItem, source), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basketId, existingItemId, BasketAction.AddItem, source), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddItemsAsync_WhenRequestContainsDuplicateItems_AddsEachItemOnce()
+        {
+            // Arrange
+            Guid basketId = Guid.NewGuid();
+            BasketItemSource source = BasketItemSource.CatalogPage;
+            var basket = CreateBasketWithItems(basketId);
+            basket.Items.Clear();
+            string[] itemIds = ["item-4", "item-4", "item-5"];
+
+            _basketRepositoryMock
+                .Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct))
+                .ReturnsAsync(basket);
+            _basketRepositoryMock
+                .Setup(r => r.AddItemsAsync(It.IsAny<IEnumerable<BasketItem>>(), _ct))
+                .ReturnsAsync(true);
+
+            // Act
+            Basket? result = await _basketService.AddItemsAsync(basket.UserId, basket.Slug, itemIds, source, _ct);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(["item-4", "item-5"], result.Items.Select(i => i.ItemId));
+
+            _basketRepositoryMock.Verify(r => r.AddItemsAsync(It.Is<IEnumerable<BasketItem>>(
+                items => items.Select(i => i.ItemId).SequenceEqual(new[] { "item-4", "item-5" })
+            ), _ct), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basketId, "item-4", BasketAction.AddItem, source), Times.Once);
+            _loggerMock.Verify(l => l.LogAsync(basket.UserId, basketId, "item-5", BasketAction.AddItem, source), Times.Once);
+        }
+
+        [Fact]
+        public async Task AddItemsAsync_WhenAllItemsAlreadyExist_ReturnsBasketWithoutRepositoryOrLogging()
+        {
+            // Arrange
+            Guid basketId = Guid.NewGuid();
+            BasketItemSource source = BasketItemSource.CatalogPage;
+            var basket = CreateBasketWithItems(basketId);
+            string[] itemIds = basket.Items.Select(i => i.ItemId).ToArray();
+
+            _basketRepositoryMock
+                .Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct))
+                .ReturnsAsync(basket);
+
+            // Act
+            Basket? result = await _basketService.AddItemsAsync(basket.UserId, basket.Slug, itemIds, source, _ct);
+
+            // Assert
+            Assert.Equal(basket, result);
+            _basketRepositoryMock.Verify(r => r.AddItemsAsync(It.IsAny<IEnumerable<BasketItem>>(), _ct), Times.Never);
+            _loggerMock.Verify(l => l.LogAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string?>(), It.IsAny<BasketAction>(), It.IsAny<BasketItemSource>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddItemsAsync_WhenBasketNotFound_ReturnsNull()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            string slug = "missing-basket";
+            string[] itemIds = ["item-1"];
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync((Basket?)null);
+
+            // Act
+            var result = await _basketService.AddItemsAsync(userId, slug, itemIds, BasketItemSource.UserPage, _ct);
+
+            // Assert
+            Assert.Null(result);
+            _basketRepositoryMock.Verify(r => r.AddItemsAsync(It.IsAny<IEnumerable<BasketItem>>(), _ct), Times.Never);
+            _loggerMock.Verify(l => l.LogAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string?>(), It.IsAny<BasketAction>(), It.IsAny<BasketItemSource>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddItemsAsync_WhenUserMismatch_ReturnsNull()
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            string slug = "basket";
+            string[] itemIds = ["item-1"];
+            Basket basket = new Basket(Guid.NewGuid(), slug, "Basket", false);
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(userId, slug, _ct)).ReturnsAsync(basket);
+
+            // Act
+            var result = await _basketService.AddItemsAsync(userId, slug, itemIds, BasketItemSource.UserPage, _ct);
+
+            // Assert
+            Assert.Null(result);
+            _basketRepositoryMock.Verify(r => r.AddItemsAsync(It.IsAny<IEnumerable<BasketItem>>(), _ct), Times.Never);
+            _loggerMock.Verify(l => l.LogAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string?>(), It.IsAny<BasketAction>(), It.IsAny<BasketItemSource>()), Times.Never);
+        }
+
+        [Fact]
         public async Task RemoveItemAsync_WhenItemExistsInBasket_ReturnsTrueAndRemovesItem()
         {
             // Arrange

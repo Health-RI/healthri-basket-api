@@ -144,6 +144,27 @@ public class BasketsController(IBasketService service) : ControllerBase
         return NotFound();
     }
 
+    [HttpPost("{slug}/items/batch")]
+    [ProducesResponseType(typeof(Basket), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AddItems(string slug, [FromBody] IEnumerable<string>? itemIds, CancellationToken ct)
+    {
+        if (!TryGetUserId(out var userId, out var error))
+            return error!;
+
+        if (itemIds == null)
+            return BadRequest("At least one item ID is required.");
+
+        var itemIdsList = itemIds.ToList();
+        if (itemIdsList.Count == 0 || itemIdsList.All(string.IsNullOrWhiteSpace))
+            return BadRequest("At least one item ID is required.");
+
+        var result = await service.AddItemsAsync(userId, slug, itemIdsList, BasketItemSource.CatalogPage, ct);
+        return result != null ? Ok(result) : NotFound();
+    }
+
     [HttpDelete("{slug}/items")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

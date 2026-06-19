@@ -79,6 +79,30 @@ public class BasketRepositoryTests
     }
 
     [Fact]
+    public async Task AddItemsAsync_WhenCalled_AddsBasketItems()
+    {
+        using var context = CreateContext();
+        var repo = new BasketRepository(context);
+        var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
+        context.Baskets.Add(basket);
+        await context.SaveChangesAsync();
+
+        var basketItems = new[]
+        {
+            new BasketItem(basket, "item-1"),
+            new BasketItem(basket, "item-2"),
+        };
+
+        await repo.AddItemsAsync(basketItems, CancellationToken.None);
+
+        var savedItemIds = await context.BasketItems
+            .Where(bi => bi.BasketId == basket.Id)
+            .Select(bi => bi.ItemId)
+            .ToListAsync();
+        Assert.Equal(["item-1", "item-2"], savedItemIds);
+    }
+
+    [Fact]
     public async Task RemoveItemAsync_WhenCalled_RemovesBasketItem()
     {
         using var context = CreateContext();

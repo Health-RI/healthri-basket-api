@@ -393,6 +393,85 @@ namespace healthri_basket_api.test.Controller.Tests
         }
 
         [Fact]
+        public async Task AddItems_WhenItemsAreAddedSuccessfully_ReturnsOkWithUpdatedBasket()
+        {
+            // Arrange
+            Guid basketId = Guid.NewGuid();
+            Basket expectedBasket = CreateBasketWithItems(basketId);
+            string[] itemIds = ["item-a", "item-b"];
+            expectedBasket.ClearItems();
+            foreach (var itemId in itemIds)
+            {
+                expectedBasket.AddItem(itemId);
+            }
+
+            _basketServiceMock
+                .Setup(s => s.AddItemsAsync(expectedBasket.UserId, expectedBasket.Slug, itemIds, BasketItemSource.CatalogPage, _ct))
+                .ReturnsAsync(expectedBasket);
+
+            SetAuthenticatedUser(expectedBasket.UserId);
+
+            // Act
+            IActionResult result = await _basketController.AddItems(expectedBasket.Slug, itemIds, _ct);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnedBasket = Assert.IsType<Basket>(okResult.Value);
+
+            Assert.Equal(expectedBasket, returnedBasket);
+            Assert.Equal(itemIds, returnedBasket.Items.Select(i => i.ItemId));
+        }
+
+        [Fact]
+        public async Task AddItems_WhenBasketDoesNotExist_ReturnsNotFound()
+        {
+            // Arrange
+            string slug = "test-slug";
+            Guid userId = Guid.NewGuid();
+            string[] itemIds = ["item-404"];
+
+            _basketServiceMock
+                .Setup(s => s.AddItemsAsync(userId, slug, itemIds, BasketItemSource.CatalogPage, _ct))
+                .ReturnsAsync((Basket?)null);
+
+            SetAuthenticatedUser(userId);
+
+            // Act
+            IActionResult result = await _basketController.AddItems(slug, itemIds, _ct);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        public static IEnumerable<object?[]> InvalidAddItemsPayloads =>
+        [
+            [null],
+            [Array.Empty<string>()],
+            [new[] { "", " " }],
+        ];
+
+        [Theory]
+        [MemberData(nameof(InvalidAddItemsPayloads))]
+        public async Task AddItems_WhenPayloadHasNoValidItems_ReturnsBadRequest(string[]? itemIds)
+        {
+            // Arrange
+            Guid userId = Guid.NewGuid();
+            SetAuthenticatedUser(userId);
+
+            // Act
+            IActionResult result = await _basketController.AddItems("test-slug", itemIds, _ct);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+            _basketServiceMock.Verify(s => s.AddItemsAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<BasketItemSource>(),
+                It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
         public async Task RemoveItem_WhenItemIsRemovedSuccessfully_ReturnsOk()
         {
             // Arrange

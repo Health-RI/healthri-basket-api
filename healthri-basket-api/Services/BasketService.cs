@@ -179,6 +179,47 @@ public class BasketService(
         return basket;
     }
 
+    public async Task<Basket?> AddItemsAsync(Guid userId, string slug, IEnumerable<string> itemIds, BasketItemSource source, CancellationToken ct)
+    {
+        var uniqueItemIds = itemIds
+            .Where(itemId => !string.IsNullOrWhiteSpace(itemId))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (uniqueItemIds.Count == 0)
+        {
+            return null;
+        }
+
+        Basket? basket = await basketRepository.GetBySlugAsync(userId, slug, ct);
+        if (basket == null || basket.UserId != userId)
+            return null;
+
+        var basketItems = uniqueItemIds
+            .Where(itemId => !basket.HasItem(itemId))
+            .Select(itemId => new BasketItem(basket, itemId))
+            .ToList();
+
+        if (basketItems.Count == 0)
+        {
+            return basket;
+        }
+
+        await basketRepository.AddItemsAsync(basketItems, ct);
+
+        foreach (var basketItem in basketItems)
+        {
+            if (basket.Items.All(i => i.Id != basketItem.Id))
+            {
+                basket.Items.Add(basketItem);
+            }
+
+            await logger.LogAsync(basket.UserId, basket.Id, basketItem.ItemId, BasketAction.AddItem, source);
+        }
+
+        return basket;
+    }
+
     public async Task<bool> RemoveItemAsync(Guid userId, string slug, string itemId, BasketItemSource source, CancellationToken ct)
     {
         Basket? basket = await basketRepository.GetBySlugAsync(userId, slug, ct);

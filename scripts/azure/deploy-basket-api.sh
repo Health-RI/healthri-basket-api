@@ -10,12 +10,14 @@ case "${ENVIRONMENT}" in
     DEFAULT_CONTAINERAPP_ENV="health-ri-aca-env-test"
     DEFAULT_APP_NAME="basket-api-test"
     DEFAULT_APIM_NAME=""
+    DEFAULT_MIN_REPLICAS=0
     ;;
   acc)
     DEFAULT_RESOURCE_GROUP="healthri-uac"
     DEFAULT_CONTAINERAPP_ENV="health-ri-aca-env-acc"
     DEFAULT_APP_NAME="basket-api-acc"
     DEFAULT_APIM_NAME="healthri-api-acc"
+    DEFAULT_MIN_REPLICAS=0
     ;;
   prod|prd)
     ENVIRONMENT="prod"
@@ -23,6 +25,7 @@ case "${ENVIRONMENT}" in
     DEFAULT_CONTAINERAPP_ENV="health-ri-aca-env"
     DEFAULT_APP_NAME="basket-api"
     DEFAULT_APIM_NAME="healthri-api"
+    DEFAULT_MIN_REPLICAS=1
     ;;
   *)
     echo "Unknown ENVIRONMENT '${ENVIRONMENT}'. Use test, acc, prod." >&2
@@ -38,7 +41,7 @@ LOCATION=${LOCATION:-westeurope}
 TARGET_PORT=${TARGET_PORT:-8080}
 CPU=${CPU:-1.0}
 MEMORY=${MEMORY:-2.0Gi}
-MIN_REPLICAS=${MIN_REPLICAS:-0}
+MIN_REPLICAS=${MIN_REPLICAS:-${DEFAULT_MIN_REPLICAS}}
 MAX_REPLICAS=${MAX_REPLICAS:-1}
 WORKLOAD_PROFILE_NAME=${WORKLOAD_PROFILE_NAME:-}
 

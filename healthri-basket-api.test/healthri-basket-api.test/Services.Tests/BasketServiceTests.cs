@@ -481,6 +481,25 @@ namespace healthri_basket_api.test.Services.Tests
         }
 
         [Fact]
+        public async Task AddItemsAsync_WhenItemIdsIsNull_ReturnsBasketUnchanged()
+        {
+            // Arrange
+            Guid basketId = Guid.NewGuid();
+            Basket basket = CreateBasketWithItems(basketId);
+            int originalCount = basket.Items.Count;
+            _basketRepositoryMock.Setup(r => r.GetBySlugAsync(basket.UserId, basket.Slug, _ct)).ReturnsAsync(basket);
+
+            // Act
+            var result = await _basketService.AddItemsAsync(basket.UserId, basket.Slug, null!, BasketItemSource.UserPage, _ct);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(originalCount, result.Items.Count);
+            _basketRepositoryMock.Verify(r => r.AddItemsAsync(It.IsAny<IEnumerable<BasketItem>>(), _ct), Times.Never);
+            _loggerMock.Verify(l => l.LogAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string?>(), It.IsAny<BasketAction>(), It.IsAny<BasketItemSource>()), Times.Never);
+        }
+
+        [Fact]
         public async Task AddItemsAsync_WhenTransactionLogFails_ThrowsAndStillAddsItem()
         {
             // Arrange

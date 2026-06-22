@@ -157,6 +157,9 @@ public class BasketService(
         if (basket == null || basket.UserId != userId)
             return null;
 
+        if (itemIds == null)
+            return basket;
+
         var newItems = itemIds
             .Where(id => !string.IsNullOrWhiteSpace(id) && !basket.HasItem(id))
             .Distinct()

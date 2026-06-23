@@ -7,9 +7,9 @@
       dockerfile: ./healthri-basket-api/Dockerfile
     ports:
       - "8081:8080"
-    env_file: 
-        - path: ./healthri-basket-api/.env
-          required: true
+    env_file:
+      - path: ./healthri-basket-api/.env
+        required: true
     depends_on: [keycloak, db, adminer]
 
   keycloak:

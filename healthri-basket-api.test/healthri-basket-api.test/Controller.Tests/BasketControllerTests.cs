@@ -320,23 +320,23 @@ namespace healthri_basket_api.test.Controller.Tests
         }
 
         [Fact]
-        public async Task AddItem_WhenItemIsAddedSuccessfully_ReturnsOkWithUpdatedBasket()
+        public async Task AddItems_WhenNewItems_ReturnsOkWithUpdatedBasket()
         {
             // Arrange
             Guid basketId = Guid.NewGuid();
             Basket expectedBasket = CreateBasketWithItems(basketId);
             string itemId = "item-a";
-            expectedBasket.ClearItems(); // Start with an empty basket for this test
+            expectedBasket.ClearItems();
             expectedBasket.AddItem(itemId);
 
             _basketServiceMock
-                .Setup(s => s.AddItemAsync(expectedBasket.UserId, expectedBasket.Slug, itemId, BasketItemSource.CatalogPage, _ct))
+                .Setup(s => s.AddItemsAsync(expectedBasket.UserId, expectedBasket.Slug, It.Is<IEnumerable<string>>(ids => ids.Single() == itemId), BasketItemSource.CatalogPage, _ct))
                 .ReturnsAsync(expectedBasket);
 
             SetAuthenticatedUser(expectedBasket.UserId);
 
             // Act
-            IActionResult result = await _basketController.AddItem(expectedBasket.Slug, itemId, _ct);
+            IActionResult result = await _basketController.AddItems(expectedBasket.Slug, new AddItemsDTO { ItemIds = new[] { itemId } }, _ct);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -346,28 +346,27 @@ namespace healthri_basket_api.test.Controller.Tests
             Assert.Equal(itemId, returnedBasket.Items[0].ItemId);
         }
 
-
         [Fact]
-        public async Task AddItem_WhenItemOrBasketDoesNotExist_ReturnsNotFound()
+        public async Task AddItems_WhenBasketDoesNotExist_ReturnsNotFound()
         {
             // Arrange
             string slug = "test-slug";
             Guid userId = Guid.NewGuid();
             string itemId = "item-404";
 
-            _basketServiceMock.Setup(s => s.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, _ct));
+            _basketServiceMock.Setup(s => s.AddItemsAsync(userId, slug, It.IsAny<IEnumerable<string>>(), BasketItemSource.CatalogPage, _ct));
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.AddItem(slug, itemId, _ct);
+            IActionResult result = await _basketController.AddItems(slug, new AddItemsDTO { ItemIds = new[] { itemId } }, _ct);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
-        public async Task AddItem_WhenItemAlreadyExistsInBasket_ReturnsConflict()
+        public async Task AddItems_WhenAllItemsAlreadyInBasket_ReturnsOkWithUnchangedBasket()
         {
             // Arrange
             Guid userId = Guid.NewGuid();
@@ -377,19 +376,17 @@ namespace healthri_basket_api.test.Controller.Tests
             basket.AddItem(itemId);
 
             _basketServiceMock
-                .Setup(s => s.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, _ct))
-                .ReturnsAsync((Basket?)null);
-            _basketServiceMock
-                .Setup(s => s.GetBySlugAsync(userId, slug, _ct))
+                .Setup(s => s.AddItemsAsync(userId, slug, It.IsAny<IEnumerable<string>>(), BasketItemSource.CatalogPage, _ct))
                 .ReturnsAsync(basket);
 
             SetAuthenticatedUser(userId);
 
             // Act
-            IActionResult result = await _basketController.AddItem(slug, itemId, _ct);
+            IActionResult result = await _basketController.AddItems(slug, new AddItemsDTO { ItemIds = new[] { itemId } }, _ct);
 
             // Assert
-            Assert.IsType<ConflictObjectResult>(result);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(basket, okResult.Value);
         }
 
         [Fact]

@@ -151,30 +151,33 @@ public class BasketService(
         return true;
     }
 
-    public async Task<Basket?> AddItemAsync(Guid userId, string slug, string itemId, BasketItemSource source, CancellationToken ct)
+    public async Task<Basket?> AddItemsAsync(Guid userId, string slug, IEnumerable<string> itemIds, BasketItemSource source, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(itemId))
-        {
-            return null;
-        }
-
         Basket? basket = await basketRepository.GetBySlugAsync(userId, slug, ct);
         if (basket == null || basket.UserId != userId)
             return null;
 
-        if (basket.HasItem(itemId))
-            return null;
+        if (itemIds == null)
+            return basket;
 
-        BasketItem basketItem = new BasketItem(basket, itemId);
+        var newItems = itemIds
+            .Where(id => !string.IsNullOrWhiteSpace(id) && !basket.HasItem(id))
+            .Distinct()
+            .Select(id => new BasketItem(basket, id))
+            .ToList();
 
-        await basketRepository.AddItemAsync(basketItem, ct);
-
-        if (basket.Items.All(i => i.Id != basketItem.Id))
+        if (newItems.Count > 0)
         {
-            basket.Items.Add(basketItem);
+            await basketRepository.AddItemsAsync(newItems, ct);
+            foreach (var item in newItems)
+            {
+                if (basket.Items.All(i => i.Id != item.Id))
+                {
+                    basket.Items.Add(item);
+                }
+                await logger.LogAsync(basket.UserId, basket.Id, item.ItemId, BasketAction.AddItem, source);
+            }
         }
-
-        await logger.LogAsync(basket.UserId, basket.Id, itemId, BasketAction.AddItem, source);
 
         return basket;
     }

@@ -125,23 +125,13 @@ public class BasketsController(IBasketService service) : ControllerBase
     [HttpPost("{slug}/items")]
     [ProducesResponseType(typeof(Basket), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> AddItem(string slug, [FromBody] string itemId, CancellationToken ct)
+    public async Task<IActionResult> AddItems(string slug, [FromBody] AddItemsDTO dto, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId, out var error))
             return error!;
-        var result = await service.AddItemAsync(userId, slug, itemId, BasketItemSource.CatalogPage, ct);
-        if (result != null)
-            return Ok(result);
-
-        // Service currently returns null for both "not found" and "already exists".
-        // Map duplicate add attempts to 409 to improve REST behavior.
-        var existingBasket = await service.GetBySlugAsync(userId, slug, ct);
-        if (existingBasket?.HasItem(itemId) == true)
-            return Conflict("Item already in basket.");
-
-        return NotFound();
+        var result = await service.AddItemsAsync(userId, slug, dto.ItemIds, BasketItemSource.CatalogPage, ct);
+        return result != null ? Ok(result) : NotFound();
     }
 
     [HttpDelete("{slug}/items")]

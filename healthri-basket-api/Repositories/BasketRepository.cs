@@ -28,9 +28,9 @@ public class BasketRepository(AppDbContext context) : IBasketRepository
         return true;
     }
 
-    public async Task<bool> AddItemAsync(BasketItem basketItem, CancellationToken ct)
+    public async Task<bool> AddItemsAsync(IEnumerable<BasketItem> basketItems, CancellationToken ct)
     {
-        await context.BasketItems.AddAsync(basketItem, ct);
+        await context.BasketItems.AddRangeAsync(basketItems, ct);
         await context.SaveChangesAsync(ct);
         return true;
     }

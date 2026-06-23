@@ -62,7 +62,7 @@ public class BasketRepositoryTests
     }
 
     [Fact]
-    public async Task AddItemAsync_WhenCalled_AddsBasketItem()
+    public async Task AddItemsAsync_WhenCalled_AddsBasketItem()
     {
         using var context = CreateContext();
         var repo = new BasketRepository(context);
@@ -72,10 +72,27 @@ public class BasketRepositoryTests
         await context.SaveChangesAsync();
 
         var basketItem = new BasketItem(basket, itemId);
-        await repo.AddItemAsync(basketItem, CancellationToken.None);
+        await repo.AddItemsAsync(new[] { basketItem }, CancellationToken.None);
 
         var exists = await context.BasketItems.AnyAsync(bi => bi.BasketId == basket.Id && bi.ItemId == itemId);
         Assert.True(exists);
+    }
+
+    [Fact]
+    public async Task AddItemsAsync_WhenMultipleItems_AddsAll()
+    {
+        using var context = CreateContext();
+        var repo = new BasketRepository(context);
+        var basket = new Basket(Guid.NewGuid(), "basket", "Basket", false);
+        context.Baskets.Add(basket);
+        await context.SaveChangesAsync();
+
+        var item1 = new BasketItem(basket, "item-1");
+        var item2 = new BasketItem(basket, "item-2");
+        await repo.AddItemsAsync(new[] { item1, item2 }, CancellationToken.None);
+
+        var count = await context.BasketItems.CountAsync(bi => bi.BasketId == basket.Id);
+        Assert.Equal(2, count);
     }
 
     [Fact]

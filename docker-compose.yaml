@@ -4,11 +4,11 @@
     container_name: healthri-basket-api
     build:
       context: .
-      dockerfile: ./healthri-basket-api/Dockerfile
+      dockerfile: ./Dockerfile
     ports:
       - "8081:8080"
     env_file:
-      - path: ./healthri-basket-api/.env
+      - path: .env
         required: true
     depends_on: [keycloak, db, adminer]
 

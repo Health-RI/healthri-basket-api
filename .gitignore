@@ -59,3 +59,4 @@ nunit-*.xml
 /healthri-basket-api/.vs
 /healthri-basket-api/.env
 .idea/
+/.env

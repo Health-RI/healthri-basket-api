@@ -7,11 +7,11 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["healthri-basket-api/healthri-basket-api.csproj", "healthri-basket-api/"]
-RUN dotnet restore "healthri-basket-api/healthri-basket-api.csproj"
-COPY . .
+COPY ["healthri-basket-api.csproj", "/src/healthri-basket-api/"]
+
 WORKDIR "/src/healthri-basket-api"
+RUN dotnet restore "healthri-basket-api.csproj"
+COPY . .
 RUN dotnet build "healthri-basket-api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
